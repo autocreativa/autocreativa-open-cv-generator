@@ -1,0 +1,127 @@
+.tech-details-template {
+    font-family: 'Inter', sans-serif;
+    color: #333;
+    line-height: 1.5;
+    background: white;
+    padding: 40px;
+    max-width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+}
+
+.tech-header {
+    border-bottom: 2px solid #333;
+    padding-bottom: 20px;
+    margin-bottom: 24px;
+}
+
+.tech-name {
+    font-size: 28px;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+}
+
+.tech-contact-bar {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    color: #666;
+    flex-wrap: wrap;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #666;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 4px;
+    margin-bottom: 12px;
+    margin-top: 24px;
+}
+
+.summary-text {
+    font-size: 14px;
+    color: #444;
+}
+
+.tech-tag {
+    display: inline-block;
+    background: #f3f4f6;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.experience-item,
+.project-item,
+.education-item {
+    margin-bottom: 16px;
+}
+
+.exp-header,
+.edu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 2px;
+}
+
+.exp-role,
+.edu-degree {
+    font-size: 16px;
+    font-weight: 600;
+    color: #111;
+}
+
+.exp-date,
+.edu-date {
+    font-size: 12px;
+    color: #666;
+    font-family: monospace;
+}
+
+.exp-company,
+.edu-school {
+    font-size: 14px;
+    color: #444;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.exp-desc,
+.project-desc {
+    font-size: 13px;
+    color: #555;
+    white-space: pre-line;
+}
+
+.project-name {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.tech-mini-tag {
+    display: inline-block;
+    font-size: 11px;
+    color: #666;
+    background: #f9f9f9;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-right: 4px;
+    margin-top: 4px;
+    border: 1px solid #eee;
+}

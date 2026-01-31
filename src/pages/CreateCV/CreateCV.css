@@ -1,0 +1,146 @@
+/* =====================================================
+   Create CV Page Styles
+   ===================================================== */
+
+.create-cv-page {
+    min-height: calc(100vh - 72px);
+    padding: var(--space-6) 0;
+    margin-top: 72px;
+    background: var(--bg-secondary);
+}
+
+.create-container {
+    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 72px - var(--space-12));
+}
+
+/* Header */
+.create-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-6);
+    flex-wrap: wrap;
+    gap: var(--space-4);
+}
+
+.create-cv-page .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-base);
+    font-weight: var(--font-medium);
+    color: var(--text-secondary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+.create-cv-page .back-link:hover {
+    color: var(--primary-600);
+}
+
+.create-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex: 1;
+    justify-content: center;
+}
+
+.create-title .title-icon {
+    color: var(--primary-500);
+}
+
+.create-title h1 {
+    font-size: var(--text-xl);
+    font-weight: var(--font-bold);
+    color: var(--text-primary);
+}
+
+.create-title p {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+
+/* Chat Wrapper */
+.chat-wrapper {
+    flex: 1;
+    min-height: 0;
+    background: var(--bg-primary);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+}
+
+/* Completion Overlay */
+.completion-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    animation: fadeIn 0.3s ease;
+}
+
+.completion-content {
+    background: var(--bg-primary);
+    padding: var(--space-8);
+    border-radius: var(--radius-xl);
+    text-align: center;
+    animation: scaleIn 0.3s ease;
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.completion-icon {
+    font-size: 64px;
+    margin-bottom: var(--space-4);
+}
+
+.completion-content h2 {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-bold);
+    color: var(--text-primary);
+    margin-bottom: var(--space-2);
+}
+
+.completion-content p {
+    color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .create-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .create-title {
+        flex-direction: column;
+    }
+
+    .create-container {
+        height: auto;
+        min-height: calc(100vh - 72px - var(--space-12));
+    }
+
+    .chat-wrapper {
+        min-height: 500px;
+    }
+}

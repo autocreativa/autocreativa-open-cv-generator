@@ -1,0 +1,290 @@
+/* =====================================================
+   Clean Simple Template Styles
+   ===================================================== */
+
+.cv-template.clean-simple {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #333;
+    background: white;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 48px;
+    line-height: 1.6;
+}
+
+/* Header */
+.cv-header-clean {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 24px;
+    border-bottom: 2px solid #22c55e;
+    margin-bottom: 32px;
+}
+
+.header-left {
+    flex: 1;
+}
+
+.clean-simple .cv-name {
+    font-size: 32px;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 4px;
+}
+
+.clean-simple .cv-title {
+    font-size: 16px;
+    color: #22c55e;
+    font-weight: 500;
+}
+
+.header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+.header-right .contact-item {
+    font-size: 13px;
+    color: #666;
+}
+
+/* Body */
+.cv-body-clean {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+/* Sections */
+.clean-section {
+    page-break-inside: avoid;
+}
+
+.section-heading {
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #22c55e;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.profile-text {
+    font-size: 15px;
+    color: #4b5563;
+    line-height: 1.7;
+}
+
+/* Entries (Experience, Education) */
+.entry {
+    margin-bottom: 20px;
+}
+
+.entry:last-child {
+    margin-bottom: 0;
+}
+
+.entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.entry-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #111;
+    margin-bottom: 2px;
+}
+
+.entry-subtitle {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.entry-date {
+    font-size: 13px;
+    color: #9ca3af;
+    white-space: nowrap;
+}
+
+.entry-desc {
+    font-size: 14px;
+    color: #4b5563;
+    line-height: 1.6;
+}
+
+.entry-field {
+    font-size: 13px;
+    color: #6b7280;
+    font-style: italic;
+}
+
+/* Two Columns */
+.two-columns {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+}
+
+.clean-section.half {
+    margin-bottom: 0;
+}
+
+/* Skills List */
+.skills-list-clean {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.skill-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.skill-name {
+    font-size: 14px;
+    color: #374151;
+}
+
+.skill-dots {
+    display: flex;
+    gap: 4px;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #e5e7eb;
+}
+
+.dot.filled {
+    background: #22c55e;
+}
+
+.skill-level {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+/* Tags */
+.tags-clean {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tag-item {
+    padding: 6px 14px;
+    background: #f0fdf4;
+    color: #16a34a;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* Certifications */
+.certs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.cert-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.cert-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.cert-meta {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+/* Projects */
+.project-item-clean {
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border-left: 3px solid #22c55e;
+}
+
+.project-item-clean:last-child {
+    margin-bottom: 0;
+}
+
+.project-item-clean h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111;
+    margin-bottom: 6px;
+}
+
+.project-item-clean p {
+    font-size: 14px;
+    color: #4b5563;
+    margin-bottom: 10px;
+}
+
+.project-techs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.project-techs span {
+    padding: 4px 10px;
+    background: #d1fae5;
+    color: #065f46;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .cv-template.clean-simple {
+        padding: 32px 24px;
+    }
+
+    .cv-header-clean {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .header-right {
+        align-items: flex-start;
+    }
+
+    .two-columns {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+
+    .certs-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media print {
+    .cv-template.clean-simple {
+        padding: 24px;
+        box-shadow: none;
+    }
+}
