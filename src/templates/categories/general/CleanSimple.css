@@ -58,9 +58,9 @@
     gap: 28px;
 }
 
-/* Sections */
+/* Dejar que el navegador decida los saltos de página */
 .clean-section {
-    page-break-inside: avoid;
+    /* Sin restricciones de page-break */
 }
 
 .section-heading {

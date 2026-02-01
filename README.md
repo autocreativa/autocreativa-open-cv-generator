@@ -33,19 +33,36 @@ npm install
 
 ## Variables de entorno
 
-Este proyecto usa OpenRouter desde el frontend (Vite). **No subas tu API key al repositorio**.
+⚠️ **IMPORTANTE:** Este proyecto usa OpenRouter desde el frontend (Vite). **NUNCA subas tu API key al repositorio**.
 
-1. Copia el ejemplo:
+### Configuración
+
+1. Copia el archivo de ejemplo:
 
 ```bash
 cp .env.example .env
 ```
 
-2. Completa los valores en `.env`:
+2. Edita `.env` y completa los valores:
 
-- `VITE_OPENROUTER_API_KEY`
-- `VITE_OPENROUTER_API_URL`
-- `VITE_OPENROUTER_MODEL`
+```env
+VITE_OPENROUTER_API_KEY=tu_api_key_aqui
+VITE_OPENROUTER_API_URL=https://openrouter.ai/api/v1/chat/completions
+VITE_OPENROUTER_MODEL=x-ai/grok-code-fast-1
+```
+
+3. **Verifica antes de hacer commit:**
+
+```bash
+# Verificar que .env NO está en git
+git status | grep .env
+# No debe mostrar .env (solo .env.example si lo modificaste)
+```
+
+### ⚠️ Si accidentalmente subiste tu API key
+
+1. **Rotar la key inmediatamente** en https://openrouter.ai/keys
+2. Ver instrucciones detalladas en [SECURITY.md](./SECURITY.md)
 
 ## Scripts
 

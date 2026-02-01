@@ -34,16 +34,25 @@
     gap: var(--space-3);
 }
 
- .toolbar-left {
-     min-width: 0;
- }
+.toolbar-left {
+    min-width: 0;
+}
 
- .toolbar-right {
-     margin-left: auto;
-     flex-shrink: 0;
-     flex-wrap: wrap;
-     row-gap: var(--space-2);
- }
+.toolbar-right {
+    margin-left: auto;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    row-gap: var(--space-2);
+}
+
+.page-size-selector select {
+    padding: var(--space-2) var(--space-3);
+    background: var(--secondary-100);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: var(--text-sm);
+}
 
 .back-btn {
     display: flex;
@@ -303,6 +312,8 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
+    overflow-x: hidden;
+    min-width: 0;
 }
 
 /* Field Group */
@@ -348,6 +359,9 @@
 
 .field-group input,
 .field-group textarea {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     padding: var(--space-3);
     background: var(--bg-secondary);
     border: 1px solid var(--border-light);
@@ -372,6 +386,11 @@
      display: grid;
      grid-template-columns: 1fr 1fr;
      gap: var(--space-3);
+     min-width: 0;
+ }
+
+ .two-col .field-group {
+     min-width: 0;
  }
 
  .checkbox-row label {
@@ -395,6 +414,8 @@
      display: flex;
      flex-direction: column;
      gap: var(--space-3);
+     overflow-x: hidden;
+     min-width: 0;
  }
 
  .array-item.compact {
@@ -409,6 +430,9 @@
  }
 
  .field-group select {
+     width: 100%;
+     max-width: 100%;
+     box-sizing: border-box;
      padding: var(--space-3);
      background: var(--bg-secondary);
      border: 1px solid var(--border-light);
@@ -502,17 +526,102 @@
      min-height: 0;
  }
 
- .cv-preview .cv-section,
- .cv-preview .experience-item,
- .cv-preview .education-item,
- .cv-preview .project-item,
- .cv-preview .timeline-item,
- .cv-preview .certification-item,
- .cv-preview .language-item,
- .cv-preview .skill-item,
- .cv-preview .tag {
-     break-inside: avoid;
-     page-break-inside: avoid;
+ /* PDF Export - Dejar que el navegador decida los saltos de página */
+ /* Remover todas las restricciones forzadas y dejar comportamiento por defecto */
+ .cv-preview * {
+     page-break-inside: auto;
+     break-inside: auto;
+     page-break-after: auto;
+     break-after: auto;
+     page-break-before: auto;
+     break-before: auto;
+ }
+
+ /* Simular páginas en la vista previa usando CSS variables (A4/Carta) */
+ .cv-preview.page-a4 {
+     --page-width: 210mm;
+     --page-height: 297mm;
+     --page-gap: 24px;
+ }
+
+ .page-a4 {
+     --page-width: 210mm;
+     --page-height: 297mm;
+     --page-gap: 24px;
+ }
+ 
+ .cv-preview.page-letter {
+     --page-width: 216mm;
+     --page-height: 279mm;
+     --page-gap: 24px;
+ }
+
+ .page-letter {
+     --page-width: 216mm;
+     --page-height: 279mm;
+     --page-gap: 24px;
+ }
+
+ .cv-preview {
+     background: transparent;
+     width: var(--page-width, 210mm);
+     max-width: calc(100vw - 120px);
+     padding: 0;
+     margin: 0 auto;
+     position: relative;
+     border-radius: 2px;
+     overflow: visible;
+ }
+
+ /* El contenido debe ocupar el ancho de hoja (muchas plantillas tienen max-width fijo) */
+ .cv-preview #cv-content {
+     position: relative;
+     z-index: 2;
+     background: white;
+     width: 100%;
+     box-sizing: border-box;
+     min-height: var(--page-height, 297mm);
+ }
+
+ .cv-preview #cv-content.cv-template {
+     max-width: none !important;
+     margin: 0 !important;
+ }
+
+ /* Guía visual de saltos de página (línea horizontal cada altura de hoja) */
+ @media screen {
+     .cv-preview::before {
+         content: '';
+         position: absolute;
+         inset: 0;
+         pointer-events: none;
+         z-index: 3;
+         background-image: repeating-linear-gradient(
+             to bottom,
+             transparent 0,
+             transparent calc(var(--page-height, 297mm) - 1px),
+             rgba(0, 0, 0, 0.12) calc(var(--page-height, 297mm) - 1px),
+             rgba(0, 0, 0, 0.12) var(--page-height, 297mm)
+         );
+     }
+
+     /* Espacio visible entre páginas en la vista previa (no aplica al PDF) */
+     html:not(.pdf-exporting) .cv-preview #cv-content {
+         mask-image: repeating-linear-gradient(
+             to bottom,
+             black 0,
+             black var(--page-height, 297mm),
+             transparent var(--page-height, 297mm),
+             transparent calc(var(--page-height, 297mm) + var(--page-gap, 24px))
+         );
+         -webkit-mask-image: repeating-linear-gradient(
+             to bottom,
+             black 0,
+             black var(--page-height, 297mm),
+             transparent var(--page-height, 297mm),
+             transparent calc(var(--page-height, 297mm) + var(--page-gap, 24px))
+         );
+     }
  }
 
  .ai-original {
@@ -536,50 +645,56 @@
      line-height: var(--leading-relaxed);
  }
 
- .ai-suggestions-label {
-     font-size: var(--text-sm);
-     font-weight: var(--font-semibold);
-     color: var(--text-secondary);
-     margin-bottom: var(--space-2);
- }
+.ai-suggestions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
 
- .ai-loading {
-     display: flex;
-     align-items: center;
-     gap: var(--space-2);
-     color: var(--text-secondary);
-     font-size: var(--text-sm);
-     padding: var(--space-3);
- }
+.ai-suggestions-label {
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-2);
+}
 
- .ai-error {
-     padding: var(--space-3);
-     border: 1px solid rgba(239, 68, 68, 0.3);
-     border-radius: var(--radius-lg);
-     background: rgba(239, 68, 68, 0.08);
-     color: rgb(185, 28, 28);
-     font-size: var(--text-sm);
- }
+.ai-loading {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+    padding: var(--space-3);
+}
 
- .ai-empty {
-     padding: var(--space-3);
-     color: var(--text-muted);
-     font-size: var(--text-sm);
- }
+.ai-error {
+    padding: var(--space-3);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: var(--radius-lg);
+    background: rgba(239, 68, 68, 0.08);
+    color: rgb(185, 28, 28);
+    font-size: var(--text-sm);
+}
 
- .ai-suggestion {
-     width: 100%;
-     text-align: left;
-     padding: var(--space-4);
-     border-radius: var(--radius-lg);
-     border: 1px solid var(--border-light);
-     background: var(--bg-secondary);
-     display: grid;
-     grid-template-columns: 20px 1fr;
-     gap: var(--space-3);
-     align-items: start;
-     transition: all var(--transition-fast);
- }
+.ai-empty {
+    padding: var(--space-3);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.ai-suggestion {
+    width: 100%;
+    text-align: left;
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+    background: var(--bg-secondary);
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    gap: var(--space-3);
+    align-items: start;
+    transition: all var(--transition-fast);
+}
 
  .ai-suggestion:hover {
      background: var(--primary-50);
@@ -611,16 +726,154 @@
  }
 
 .preview-wrapper {
-    max-width: 800px;
     width: 100%;
+    padding: var(--space-8) var(--space-6);
+    position: relative;
+    background: linear-gradient(
+        135deg,
+        #e5e7eb 0%,
+        #d1d5db 50%,
+        #e5e7eb 100%
+    );
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-6);
+    overflow-y: auto;
+    /* Simular una superficie de trabajo */
+     background-image: 
+         repeating-linear-gradient(
+             0deg,
+             transparent,
+             transparent 20px,
+             rgba(0, 0, 0, 0.02) 20px,
+             rgba(0, 0, 0, 0.02) 21px
+         );
+ }
+
+ .pdf-pages {
+     width: var(--page-width, 210mm);
+     max-width: calc(100vw - 120px);
+     display: flex;
+     flex-direction: column;
+     gap: var(--page-gap, 24px);
+     align-items: center;
+     position: relative;
+ }
+
+ .pdf-page {
+     width: 100%;
+     background: white;
+     border-radius: 2px;
+     box-shadow:
+         0 0 0 1px rgba(0, 0, 0, 0.1),
+         0 2px 8px rgba(0, 0, 0, 0.1),
+         0 8px 24px rgba(0, 0, 0, 0.15);
+     overflow: hidden;
+ }
+
+ .pdf-page.pdf-page-skeleton {
+     height: var(--page-height, 297mm);
+     background:
+         linear-gradient(
+             110deg,
+             rgba(243, 244, 246, 0.9) 8%,
+             rgba(229, 231, 235, 0.9) 18%,
+             rgba(243, 244, 246, 0.9) 33%
+         );
+     background-size: 200% 100%;
+     animation: pdfShimmer 1.2s linear infinite;
+ }
+
+ .pdf-page img {
+     width: 100%;
+     height: auto;
+     display: block;
+ }
+
+ .pdf-pages-empty {
+     width: 100%;
+     padding: var(--space-4);
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     gap: var(--space-2);
+     color: var(--text-secondary);
+     background: rgba(255, 255, 255, 0.7);
+     border: 1px solid var(--border-light);
+     border-radius: var(--radius-lg);
+ }
+
+ @keyframes pdfShimmer {
+     0% {
+         background-position: 100% 0;
+     }
+     100% {
+         background-position: -100% 0;
+     }
+ }
+
+ .cv-preview.pdf-source {
+     position: absolute;
+     left: -100000px;
+     top: 0;
+     pointer-events: none;
+ }
+
+/* En pantalla, mostrar como hoja de papel */
+@media screen {
+    .cv-preview {
+        box-shadow: 
+            0 0 0 1px rgba(0, 0, 0, 0.1),
+            0 2px 8px rgba(0, 0, 0, 0.1),
+            0 8px 24px rgba(0, 0, 0, 0.15);
+    }
 }
 
-.cv-preview {
-    background: white;
-    box-shadow: var(--shadow-xl);
-    border-radius: var(--radius-md);
-    overflow: hidden;
+/* En impresión/PDF, mantener el comportamiento de página */
+@media print {
+    .cv-preview {
+        page-break-after: always;
+        break-after: page;
+        margin-bottom: 0;
+        box-shadow: none;
+        width: 100%;
+        max-width: 100%;
+        border-radius: 0;
+    }
+    
+    .preview-wrapper {
+        background: white;
+        padding: 0;
+        background-image: none;
+    }
 }
+
+ /* Durante exportación a PDF (html2pdf/html2canvas) desactivar overlays y min-height */
+ html.pdf-exporting .cv-preview::before {
+     display: none;
+ }
+
+ html.pdf-exporting .preview-wrapper {
+     background: white;
+     background-image: none;
+     padding: 0;
+ }
+
+ html.pdf-exporting .cv-preview {
+     box-shadow: none;
+ }
+
+ html.pdf-exporting .cv-preview #cv-content {
+     min-height: 0;
+     mask-image: none;
+     -webkit-mask-image: none;
+ }
+
+ html.pdf-exporting .cv-template {
+     padding: 24px !important;
+ }
 
 .no-template {
     display: flex;

@@ -197,6 +197,7 @@
     padding: 32px 40px;
 }
 
+/* Dejar que el navegador decida los saltos de página */
 .main-section {
     margin-bottom: 32px;
 }

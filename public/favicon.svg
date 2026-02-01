@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#22c55e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#16a34a;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Fondo con esquinas redondeadas -->
+  <rect width="64" height="64" rx="12" fill="url(#grad)"/>
+  
+  <!-- Documento/CV -->
+  <g transform="translate(16, 12)">
+    <!-- Hoja de papel -->
+    <rect x="0" y="0" width="32" height="40" rx="2" fill="white" opacity="0.95"/>
+    
+    <!-- Líneas del documento (simulando texto) -->
+    <line x1="6" y1="8" x2="26" y2="8" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="6" y1="14" x2="26" y2="14" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="6" y1="20" x2="20" y2="20" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/>
+    
+    <!-- Check mark (marca de éxito/IA) -->
+    <circle cx="24" cy="28" r="6" fill="#22c55e"/>
+    <path d="M 21 28 L 23 30 L 27 26" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+</svg>

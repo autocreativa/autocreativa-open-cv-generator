@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import Hero from '../../components/landing/Hero';
 import Features from '../../components/landing/Features';
 import HowItWorks from '../../components/landing/HowItWorks';
@@ -39,9 +40,9 @@ const Landing = () => {
                             Únete a miles de personas que ya crearon su currículum con CVMagic.
                             Es gratis, rápido y potenciado por IA.
                         </p>
-                        <a href="/crear" className="cta-button">
+                        <Link to="/crear" className="cta-button">
                             Crear mi CV Gratis
-                        </a>
+                        </Link>
                     </div>
                 </div>
             </section>

@@ -18,8 +18,12 @@ import CoverLetterModal from '../../components/editor/CoverLetterModal';
 import { useCV } from '../../context/CVContext';
 import { templates, getTemplateComponent } from '../../templates';
 import { getImprovementSuggestions } from '../../services/openRouterService';
-import { exportToPDF } from '../../utils/pdfExporter';
+import { exportToPDF, generatePDFBlob } from '../../utils/pdfExporter';
+import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import './Editor.css';
+
+GlobalWorkerOptions.workerSrc = pdfWorker;
 
 const Editor = () => {
     const navigate = useNavigate();
@@ -34,6 +38,18 @@ const Editor = () => {
 
     const [showCoverLetter, setShowCoverLetter] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
+
+    const [pageSize, setPageSize] = useState('a4');
+
+    const [previewPages, setPreviewPages] = useState([]);
+    const [isRenderingPreview, setIsRenderingPreview] = useState(false);
+    const [previewFailed, setPreviewFailed] = useState(false);
+    const previewJobRef = useRef(0);
+    const previewDebounceRef = useRef(null);
+
+    const prevTemplateRef = useRef(currentTemplate);
+    const prevPageSizeRef = useRef(pageSize);
+    const prevActiveTabRef = useRef(activeTab);
 
     const applySuggestionRef = useRef(null);
     const [aiModalOpen, setAiModalOpen] = useState(false);
@@ -136,7 +152,11 @@ const Editor = () => {
         setTimeout(async () => {
             const content = document.getElementById('cv-content');
             if (content) {
-                const success = await exportToPDF(content, `CV_${cvData?.contactInfo?.fullName || 'Profesional'}.pdf`);
+                const success = await exportToPDF(
+                    content,
+                    `CV_${cvData?.contactInfo?.fullName || 'Profesional'}.pdf`,
+                    { format: pageSize }
+                );
                 if (success) {
                     // Success notification
                 }
@@ -144,7 +164,11 @@ const Editor = () => {
                 // Fallback if id not found (templates should have id="cv-content")
                 const previewEl = document.querySelector('.cv-preview > div');
                 if (previewEl) {
-                    await exportToPDF(previewEl, `CV_${cvData?.contactInfo?.fullName || 'Profesional'}.pdf`);
+                    await exportToPDF(
+                        previewEl,
+                        `CV_${cvData?.contactInfo?.fullName || 'Profesional'}.pdf`,
+                        { format: pageSize }
+                    );
                 } else {
                     window.print();
                 }
@@ -152,6 +176,92 @@ const Editor = () => {
             setIsExporting(false);
         }, 500);
     };
+
+    const renderPdfPreviewPages = async () => {
+        const jobId = ++previewJobRef.current;
+        setIsRenderingPreview(true);
+        setPreviewFailed(false);
+
+        try {
+            const content = document.getElementById('cv-content');
+            if (!content) {
+                if (jobId === previewJobRef.current) setPreviewPages([]);
+                return;
+            }
+
+            const blob = await generatePDFBlob(content, { format: pageSize });
+            if (!blob) {
+                if (jobId === previewJobRef.current) setPreviewPages([]);
+                if (jobId === previewJobRef.current) setPreviewFailed(true);
+                return;
+            }
+
+            const buffer = await blob.arrayBuffer();
+            const pdf = await getDocument({ data: buffer }).promise;
+
+            const pageImages = [];
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                const page = await pdf.getPage(pageNum);
+                const viewport = page.getViewport({ scale: 1.5 });
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = Math.floor(viewport.width);
+                canvas.height = Math.floor(viewport.height);
+
+                await page.render({ canvasContext: ctx, viewport }).promise;
+                pageImages.push(canvas.toDataURL('image/png'));
+            }
+
+            if (jobId === previewJobRef.current) {
+                setPreviewPages(pageImages);
+            }
+        } catch (error) {
+            console.error('Error rendering PDF preview:', error);
+            if (jobId === previewJobRef.current) {
+                setPreviewPages([]);
+                setPreviewFailed(true);
+            }
+        } finally {
+            if (jobId === previewJobRef.current) setIsRenderingPreview(false);
+        }
+    };
+
+    useEffect(() => {
+        const enteredPreview = prevActiveTabRef.current !== 'preview' && activeTab === 'preview';
+        const templateChanged = prevTemplateRef.current !== currentTemplate;
+        const pageSizeChanged = prevPageSizeRef.current !== pageSize;
+
+        if (enteredPreview || templateChanged || pageSizeChanged) {
+            setPreviewPages([]);
+        }
+
+        prevActiveTabRef.current = activeTab;
+        prevTemplateRef.current = currentTemplate;
+        prevPageSizeRef.current = pageSize;
+
+        if (activeTab !== 'preview') {
+            setIsRenderingPreview(false);
+            return;
+        }
+
+        if (enteredPreview || templateChanged || pageSizeChanged) {
+            setIsRenderingPreview(true);
+        }
+
+        if (previewDebounceRef.current) {
+            clearTimeout(previewDebounceRef.current);
+        }
+
+        previewDebounceRef.current = setTimeout(() => {
+            renderPdfPreviewPages();
+        }, 250);
+
+        return () => {
+            if (previewDebounceRef.current) {
+                clearTimeout(previewDebounceRef.current);
+            }
+        };
+    }, [activeTab, currentTemplate, pageSize, cvData, selectedSections]);
 
     const sectionLabels = {
         contactInfo: 'Datos de Contacto',
@@ -285,8 +395,19 @@ const Editor = () => {
                         leftIcon={<FileSignature size={16} />}
                         onClick={() => setShowCoverLetter(true)}
                     >
-                        Carta
+                        Generar carta de presentación
                     </Button>
+
+                    <div className="page-size-selector">
+                        <select
+                            value={pageSize}
+                            onChange={(e) => setPageSize(e.target.value)}
+                            aria-label="Tamaño de página"
+                        >
+                            <option value="a4">A4</option>
+                            <option value="letter">Carta</option>
+                        </select>
+                    </div>
 
                     <div className="view-toggle">
                         <button
@@ -1003,18 +1124,43 @@ const Editor = () => {
                 {/* Right Panel - Preview */}
                 <div className={`preview-panel ${activeTab === 'preview' ? 'active' : ''}`}>
                     <div className="preview-wrapper">
-                        <div className="cv-preview">
-                            {TemplateComponent ? (
-                                <TemplateComponent
-                                    cvData={{ ...cvData, selectedSections }}
-                                />
-                            ) : (
-                                <div className="no-template">
-                                    <FileText size={48} />
-                                    <p>Selecciona una plantilla para comenzar</p>
+                        {TemplateComponent ? (
+                            <>
+                                <div className={`pdf-pages page-${pageSize}`}>
+                                    {previewPages.map((src, idx) => (
+                                        <div key={idx} className="pdf-page">
+                                            <img src={src} alt={`Página ${idx + 1}`} />
+                                        </div>
+                                    ))}
+
+                                    {isRenderingPreview && previewPages.length === 0 && (
+                                        <>
+                                            <div className="pdf-page pdf-page-skeleton" aria-hidden="true" />
+                                            <div className="pdf-page pdf-page-skeleton" aria-hidden="true" />
+                                        </>
+                                    )}
+
+                                    {(!isRenderingPreview && previewPages.length === 0) && (
+                                        previewFailed ? (
+                                            <div className="pdf-pages-empty">
+                                                <span>No se pudo generar la vista previa.</span>
+                                            </div>
+                                        ) : null
+                                    )}
                                 </div>
-                            )}
-                        </div>
+
+                                <div className={`cv-preview page-${pageSize} pdf-source`} aria-hidden="true">
+                                    <TemplateComponent
+                                        cvData={{ ...cvData, selectedSections }}
+                                    />
+                                </div>
+                            </>
+                        ) : (
+                            <div className="no-template">
+                                <FileText size={48} />
+                                <p>Selecciona una plantilla para comenzar</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

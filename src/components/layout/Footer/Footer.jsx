@@ -5,6 +5,30 @@ import './Footer.css';
 const Footer = () => {
     const currentYear = new Date().getFullYear();
 
+    const handleInternalLinkClick = (e) => {
+        // Hacer scroll inmediato primero para asegurar que funcione
+        window.scrollTo(0, 0);
+        if (document.documentElement) {
+            document.documentElement.scrollTop = 0;
+        }
+        if (document.body) {
+            document.body.scrollTop = 0;
+        }
+
+        // Luego hacer scroll suave después de un pequeño delay
+        // Esto permite que el scroll instantáneo se ejecute primero
+        setTimeout(() => {
+            window.scrollTo({
+                top: 0,
+                left: 0,
+                behavior: 'smooth'
+            });
+        }, 10);
+
+        // No prevenir el comportamiento por defecto - dejar que React Router maneje la navegación
+        // El componente ScrollToTop también hará scroll cuando cambie la ruta
+    };
+
     const renderFooterLink = (link) => {
         const isExternal = Boolean(link.external) || /^https?:\/\//i.test(link.to) || /^mailto:/i.test(link.to);
 
@@ -22,7 +46,11 @@ const Footer = () => {
         }
 
         return (
-            <Link to={link.to} className="footer-link">
+            <Link 
+                to={link.to} 
+                className="footer-link"
+                onClick={handleInternalLinkClick}
+            >
                 {link.label}
             </Link>
         );
@@ -55,7 +83,11 @@ const Footer = () => {
             <div className="footer-container container">
                 {/* Brand Section */}
                 <div className="footer-brand">
-                    <Link to="/" className="footer-logo">
+                    <Link 
+                        to="/" 
+                        className="footer-logo"
+                        onClick={handleInternalLinkClick}
+                    >
                         <div className="logo-icon">
                             <FileText size={24} />
                         </div>

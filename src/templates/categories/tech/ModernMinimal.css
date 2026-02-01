@@ -87,7 +87,7 @@
     text-decoration: underline;
 }
 
-/* Sections */
+/* Dejar que el navegador decida los saltos de página */
 .cv-section {
     margin-bottom: 28px;
 }
