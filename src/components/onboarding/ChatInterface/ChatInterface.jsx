@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { Send, Mic, MicOff, Loader2, Bot, User } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Send, Mic, MicOff, Loader2, Bot, User, LayoutTemplate } from 'lucide-react';
 import { useSpeechRecognition } from '../../../hooks/useSpeechRecognition';
 import './ChatInterface.css';
 
@@ -10,7 +10,7 @@ import './ChatInterface.css';
  * @param {Function} props.onComplete - Callback cuando se completa
  * @param {Object} props.initialData - Datos iniciales del CV
  */
-const ChatInterface = ({ sections, onComplete, initialData = {} }) => {
+const ChatInterface = ({ sections, onComplete, initialData = {}, onStartWithSampleTemplate }) => {
     const [messages, setMessages] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [currentSection, setCurrentSection] = useState(0);
@@ -19,7 +19,24 @@ const ChatInterface = ({ sections, onComplete, initialData = {} }) => {
     const [isLoading, setIsLoading] = useState(false);
 
     const messagesEndRef = useRef(null);
+    const messagesContainerRef = useRef(null);
     const inputRef = useRef(null);
+
+    const messageIdRef = useRef(Date.now());
+    const lastAskedRef = useRef(null);
+    const nextMessageId = () => {
+        messageIdRef.current += 1;
+        return messageIdRef.current;
+    };
+
+    const currentSectionRef = useRef(currentSection);
+    const currentFieldIndexRef = useRef(currentFieldIndex);
+    const cvDataRef = useRef(cvData);
+
+    const hasStartedRef = useRef(false);
+    const startConversationTimeoutRef = useRef(null);
+    const askQuestionTimeoutRef = useRef(null);
+    const nextQuestionTimeoutRef = useRef(null);
 
     const {
         isListening,
@@ -32,8 +49,18 @@ const ChatInterface = ({ sections, onComplete, initialData = {} }) => {
 
     // Scroll al último mensaje
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        const container = messagesContainerRef.current;
+        if (!container) return;
+
+        // Mantener el scroll dentro del contenedor del chat (evita que el body scrollee)
+        container.scrollTop = container.scrollHeight;
     }, [messages]);
+
+    useEffect(() => {
+        currentSectionRef.current = currentSection;
+        currentFieldIndexRef.current = currentFieldIndex;
+        cvDataRef.current = cvData;
+    }, [currentSection, currentFieldIndex, cvData]);
 
     // Procesar transcript del reconocimiento de voz
     useEffect(() => {
@@ -42,31 +69,7 @@ const ChatInterface = ({ sections, onComplete, initialData = {} }) => {
         }
     }, [transcript, isListening]);
 
-    // Iniciar conversación
-    useEffect(() => {
-        if (messages.length === 0 && sections.length > 0) {
-            const welcomeMessage = {
-                id: Date.now(),
-                type: 'bot',
-                content: '¡Hola! 👋 Soy tu asistente para crear tu CV. Te haré algunas preguntas para completar cada sección. ¡Empecemos!',
-            };
-
-            setMessages([welcomeMessage]);
-
-            setTimeout(() => {
-                askNextQuestion();
-            }, 1000);
-        }
-    }, [sections]);
-
-    const getCurrentField = () => {
-        if (currentSection >= sections.length) return null;
-        const section = sections[currentSection];
-        const fields = getSectionFields(section);
-        return fields[currentFieldIndex];
-    };
-
-    const getSectionFields = (sectionId) => {
+    const getSectionFields = useCallback((sectionId) => {
         const fieldsBySection = {
             contactInfo: [
                 { key: 'fullName', question: '¿Cuál es tu nombre completo?', placeholder: 'Ej: Juan Pérez García' },
@@ -97,31 +100,102 @@ const ChatInterface = ({ sections, onComplete, initialData = {} }) => {
         };
 
         return fieldsBySection[sectionId] || [{ key: 'data', question: `Cuéntame sobre tu ${sectionId}`, placeholder: 'Tu respuesta...' }];
+    }, []);
+
+    // Iniciar conversación
+    useEffect(() => {
+        if (hasStartedRef.current) return;
+        if (sections.length > 0) {
+            hasStartedRef.current = true;
+            lastAskedRef.current = null;
+            const welcomeMessage = {
+                id: nextMessageId(),
+                type: 'bot',
+                content: '¡Hola! 👋 Soy tu asistente para crear tu CV. Te haré algunas preguntas para completar cada sección. ¡Empecemos!',
+            };
+
+            setMessages([welcomeMessage]);
+
+            // Inmediatamente después, mostrar encabezado de la primera sección
+            const firstSection = sections[0];
+            const sectionMessage = {
+                id: nextMessageId(),
+                type: 'bot',
+                content: `📝 **${getSectionName(firstSection)}**`,
+                isSection: true,
+            };
+            setMessages((prev) => [...prev, sectionMessage]);
+
+            // Luego la primera pregunta
+            const firstSectionFields = getSectionFields(firstSection);
+            const firstField = firstSectionFields[0];
+            if (firstField) {
+                const questionMessage = {
+                    id: nextMessageId(),
+                    type: 'bot',
+                    content: firstField.question,
+                };
+                setMessages((prev) => [...prev, questionMessage]);
+            }
+
+            if (startConversationTimeoutRef.current) {
+                clearTimeout(startConversationTimeoutRef.current);
+            }
+            startConversationTimeoutRef.current = setTimeout(() => {
+                try {
+                    inputRef.current?.focus({ preventScroll: true });
+                } catch {
+                    inputRef.current?.focus();
+                }
+            }, 500);
+        }
+        return () => {
+            if (startConversationTimeoutRef.current) {
+                clearTimeout(startConversationTimeoutRef.current);
+            }
+            if (askQuestionTimeoutRef.current) {
+                clearTimeout(askQuestionTimeoutRef.current);
+            }
+            if (nextQuestionTimeoutRef.current) {
+                clearTimeout(nextQuestionTimeoutRef.current);
+            }
+        };
+    }, [sections, getSectionFields]);
+
+    const getCurrentField = () => {
+        if (currentSection >= sections.length) return null;
+        const section = sections[currentSection];
+        const fields = getSectionFields(section);
+        return fields[currentFieldIndex];
     };
 
     const askNextQuestion = () => {
-        if (currentSection >= sections.length) {
+        const sectionIndex = currentSectionRef.current;
+        const fieldIndex = currentFieldIndexRef.current;
+        const promptKey = `${sectionIndex}:${fieldIndex}`;
+        if (lastAskedRef.current === promptKey) return;
+        lastAskedRef.current = promptKey;
+
+        if (sectionIndex >= sections.length) {
             // Conversación terminada
             const finalMessage = {
-                id: Date.now(),
+                id: nextMessageId(),
                 type: 'bot',
                 content: '¡Excelente! Ya tengo toda la información necesaria. 🎉 Ahora puedes elegir una plantilla para tu CV.',
             };
             setMessages((prev) => [...prev, finalMessage]);
 
-            setTimeout(() => {
-                onComplete(cvData);
-            }, 2000);
+            // No llamar a onComplete automáticamente; esperar a que el usuario haga clic en el botón
             return;
         }
 
-        const section = sections[currentSection];
+        const section = sections[sectionIndex];
         const fields = getSectionFields(section);
 
-        if (currentFieldIndex === 0) {
-            // Nueva sección
+        // No mostrar encabezado si ya es la primera sección (ya se mostró al inicio)
+        if (fieldIndex === 0 && sectionIndex > 0) {
             const sectionMessage = {
-                id: Date.now(),
+                id: nextMessageId(),
                 type: 'bot',
                 content: `📝 **${getSectionName(section)}**`,
                 isSection: true,
@@ -129,16 +203,23 @@ const ChatInterface = ({ sections, onComplete, initialData = {} }) => {
             setMessages((prev) => [...prev, sectionMessage]);
         }
 
-        const field = fields[currentFieldIndex];
+        const field = fields[fieldIndex];
         if (field) {
-            setTimeout(() => {
+            if (askQuestionTimeoutRef.current) {
+                clearTimeout(askQuestionTimeoutRef.current);
+            }
+            askQuestionTimeoutRef.current = setTimeout(() => {
                 const questionMessage = {
-                    id: Date.now() + 1,
+                    id: nextMessageId(),
                     type: 'bot',
                     content: field.question,
                 };
                 setMessages((prev) => [...prev, questionMessage]);
-                inputRef.current?.focus();
+                try {
+                    inputRef.current?.focus({ preventScroll: true });
+                } catch {
+                    inputRef.current?.focus();
+                }
             }, 500);
         }
     };
@@ -162,7 +243,7 @@ const ChatInterface = ({ sections, onComplete, initialData = {} }) => {
 
         // Agregar mensaje del usuario
         const userMessage = {
-            id: Date.now(),
+            id: nextMessageId(),
             type: 'user',
             content: inputValue,
         };
@@ -185,15 +266,33 @@ const ChatInterface = ({ sections, onComplete, initialData = {} }) => {
 
         setInputValue('');
 
-        // Avanzar a siguiente pregunta
-        if (currentFieldIndex < fields.length - 1) {
-            setCurrentFieldIndex(currentFieldIndex + 1);
-        } else {
-            setCurrentFieldIndex(0);
-            setCurrentSection(currentSection + 1);
+        try {
+            inputRef.current?.focus({ preventScroll: true });
+        } catch {
+            inputRef.current?.focus();
         }
 
-        setTimeout(() => {
+        // Avanzar a siguiente pregunta
+        let nextSectionIndex = currentSection;
+        let nextFieldIndex = currentFieldIndex;
+        if (currentFieldIndex < fields.length - 1) {
+            nextFieldIndex = currentFieldIndex + 1;
+            setCurrentFieldIndex(nextFieldIndex);
+        } else {
+            nextFieldIndex = 0;
+            nextSectionIndex = currentSection + 1;
+            setCurrentFieldIndex(nextFieldIndex);
+            setCurrentSection(nextSectionIndex);
+        }
+
+        currentSectionRef.current = nextSectionIndex;
+        currentFieldIndexRef.current = nextFieldIndex;
+
+        // Programar siguiente pregunta
+        if (nextQuestionTimeoutRef.current) {
+            clearTimeout(nextQuestionTimeoutRef.current);
+        }
+        nextQuestionTimeoutRef.current = setTimeout(() => {
             askNextQuestion();
         }, 500);
     };
@@ -214,9 +313,28 @@ const ChatInterface = ({ sections, onComplete, initialData = {} }) => {
     };
 
     return (
-        <div className="chat-interface">
-            {/* Messages */}
-            <div className="chat-messages">
+        <>
+            {onStartWithSampleTemplate && (
+                <div className="chat-sample-toggle">
+                    <button
+                        className="chat-sample-toggle-btn"
+                        onClick={() => {
+                            if (onStartWithSampleTemplate) {
+                                onStartWithSampleTemplate();
+                            }
+                        }}
+                    >
+                        <LayoutTemplate size={18} />
+                        <div className="chat-sample-toggle-text">
+                            <span className="chat-sample-toggle-title">Rellenar con datos de ejemplo</span>
+                            <span className="chat-sample-toggle-subtitle">Ver plantillas y editarlas</span>
+                        </div>
+                    </button>
+                </div>
+            )}
+            <div className="chat-interface">
+                {/* Messages */}
+                <div className="chat-messages" ref={messagesContainerRef}>
                 {messages.map((message) => (
                     <div
                         key={message.id}
@@ -282,7 +400,8 @@ const ChatInterface = ({ sections, onComplete, initialData = {} }) => {
                     </div>
                 )}
             </div>
-        </div>
+            </div>
+        </>
     );
 };
 

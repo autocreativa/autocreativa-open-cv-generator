@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Sparkles, FileText, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Sparkles, FileText, CheckCircle, LayoutTemplate } from 'lucide-react';
 import PDFUploader from '../../components/pdf/PDFUploader';
 import Button from '../../components/common/Button';
 import { usePDFReader } from '../../hooks/usePDFReader';
 import { useCV } from '../../context/CVContext';
+import { getSampleCVData } from '../../utils/constants';
 import './Import.css';
 
 const Import = () => {
@@ -54,6 +55,18 @@ const Import = () => {
             // Navegar a selección de plantilla
             navigate('/seleccionar-plantilla');
         }
+    };
+
+    const handleStartWithSample = () => {
+        const sampleData = getSampleCVData();
+        setCVData({
+            ...sampleData,
+            id: crypto.randomUUID(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        });
+        setSelectedSections(sampleData.selectedSections);
+        navigate('/seleccionar-plantilla');
     };
 
     return (
@@ -123,6 +136,10 @@ const Import = () => {
                                 <Link to="/crear" className="alternative-link">
                                     Crear desde cero →
                                 </Link>
+                                <span> o </span>
+                                <button className="alternative-link-btn" onClick={handleStartWithSample}>
+                                    Usar datos de ejemplo →
+                                </button>
                             </div>
                         </>
                     ) : (
@@ -164,6 +181,9 @@ const Import = () => {
                             <div className="preview-actions">
                                 <Button variant="outline" onClick={() => setShowPreview(false)}>
                                     Subir otro archivo
+                                </Button>
+                                <Button variant="ghost" onClick={handleStartWithSample} leftIcon={<LayoutTemplate size={18} />}>
+                                    Empezar con datos de ejemplo
                                 </Button>
                                 <Button onClick={handleConfirm}>
                                     Continuar con estos datos

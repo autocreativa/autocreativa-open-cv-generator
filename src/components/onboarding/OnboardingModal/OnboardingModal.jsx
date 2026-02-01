@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, CheckCircle, Circle, ArrowRight, Sparkles } from 'lucide-react';
+import { X, CheckCircle, Circle, ArrowRight, Sparkles, LayoutTemplate } from 'lucide-react';
 import Button from '../../common/Button';
 import { CV_SECTIONS, REQUIRED_SECTIONS } from '../../../utils/constants';
 import './OnboardingModal.css';
@@ -11,7 +11,7 @@ import './OnboardingModal.css';
  * @param {Function} props.onClose - Callback al cerrar
  * @param {Function} props.onComplete - Callback al completar con secciones seleccionadas
  */
-const OnboardingModal = ({ isOpen, onClose, onComplete }) => {
+const OnboardingModal = ({ isOpen, onClose, onComplete, onStartWithSampleTemplate }) => {
     const [step, setStep] = useState(1);
     const [selectedSections, setSelectedSections] = useState([...REQUIRED_SECTIONS]);
 
@@ -136,12 +136,21 @@ const OnboardingModal = ({ isOpen, onClose, onComplete }) => {
 
                 {/* Footer */}
                 <div className="modal-footer">
+                    <Button
+                        variant="ghost"
+                        onClick={onStartWithSampleTemplate}
+                        disabled={!onStartWithSampleTemplate}
+                        leftIcon={<LayoutTemplate size={18} />}
+                    >
+                        Empezar con plantilla y datos de ejemplo
+                    </Button>
                     {step === 2 && (
                         <Button variant="ghost" onClick={() => setStep(1)}>
                             Atrás
                         </Button>
                     )}
-                    <Button onClick={handleContinue} rightIcon={<ArrowRight size={18} />}>
+                    <Button onClick={handleContinue} rightIcon={<ArrowRight size={18} />}
+                    >
                         {step === 1 ? 'Continuar' : 'Empezar a crear mi CV'}
                     </Button>
                 </div>

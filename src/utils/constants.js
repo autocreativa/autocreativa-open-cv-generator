@@ -217,6 +217,103 @@ export const SKILL_LEVELS = [
     { value: 5, label: 'Experto' },
 ];
 
+export const getSampleCVData = () => {
+    return {
+        selectedSections: [
+            'contactInfo',
+            'professionalSummary',
+            'workExperience',
+            'education',
+            'technicalSkills',
+            'softSkills',
+            'languages',
+            'certifications',
+            'projects',
+            'socialLinks',
+        ],
+        profileImage: null,
+        contactInfo: {
+            fullName: 'María Fernanda López',
+            title: 'Desarrolladora Frontend',
+            email: 'maria.lopez@email.com',
+            phone: '+56 9 1234 5678',
+            address: 'Av. Providencia 1234',
+            city: 'Santiago',
+            country: 'Chile',
+        },
+        professionalSummary:
+            'Desarrolladora Frontend con experiencia en React y diseño de interfaces. Enfocada en crear productos rápidos, accesibles y con excelente UX. Me entusiasma trabajar en equipos colaborativos y medir impacto con datos.',
+        workExperience: [
+            {
+                company: 'Autocreativa',
+                position: 'Frontend Developer',
+                location: 'Santiago, CL',
+                startDate: '2023-01',
+                endDate: '',
+                isCurrent: true,
+                description:
+                    'Implementé componentes reutilizables en React, optimicé performance del render y colaboré con diseño para mejorar la experiencia de usuario. Integré APIs y aseguré consistencia visual con un design system.',
+            },
+            {
+                company: 'Studio Web',
+                position: 'Desarrolladora Web',
+                location: 'Remoto',
+                startDate: '2021-03',
+                endDate: '2022-12',
+                isCurrent: false,
+                description:
+                    'Construí landing pages y dashboards para clientes, con foco en accesibilidad (WCAG) y buenas prácticas. Coordiné entregas con equipo de backend y QA.',
+            },
+        ],
+        education: [
+            {
+                institution: 'Universidad de Chile',
+                degree: 'Ingeniería en Informática',
+                field: 'Ciencias de la Computación',
+                startDate: '2017-03',
+                endDate: '2021-12',
+                description: '',
+            },
+        ],
+        technicalSkills: [
+            { name: 'React', level: 4 },
+            { name: 'JavaScript', level: 4 },
+            { name: 'TypeScript', level: 3 },
+            { name: 'CSS / Tailwind', level: 4 },
+        ],
+        softSkills: [
+            { name: 'Comunicación' },
+            { name: 'Trabajo en equipo' },
+            { name: 'Proactividad' },
+        ],
+        languages: [
+            { language: 'Español', level: 'C2' },
+            { language: 'Inglés', level: 'B2' },
+        ],
+        certifications: [
+            {
+                name: 'React Developer',
+                institution: 'Platzi',
+                date: '2022-11',
+                url: '',
+            },
+        ],
+        projects: [
+            {
+                name: 'CV Generator',
+                description: 'Aplicación web para crear CVs con plantillas editables y exportación a PDF.',
+                technologies: ['React', 'Vite', 'CSS'],
+                url: '',
+            },
+        ],
+        socialLinks: [
+            { platform: 'LinkedIn', url: 'https://linkedin.com/in/maria-lopez' },
+            { platform: 'GitHub', url: 'https://github.com/marialopez' },
+            { platform: 'Portafolio', url: 'https://maria.dev' },
+        ],
+    };
+};
+
 // Plataformas de redes sociales
 export const SOCIAL_PLATFORMS = [
     { id: 'linkedin', name: 'LinkedIn', icon: 'Linkedin', placeholder: 'https://linkedin.com/in/usuario' },
@@ -238,6 +335,7 @@ export const INITIAL_CV_DATA = {
 
     contactInfo: {
         fullName: '',
+        title: '',
         email: '',
         phone: '',
         address: '',

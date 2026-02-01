@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Search, Filter, Check, LayoutTemplate } from 'lucide-react';
 import Button from '../../components/common/Button';
 import { templates, getTemplatesByCategory } from '../../templates';
 import { useCV } from '../../context/CVContext';
+import { getSampleCVData } from '../../utils/constants';
 import './SelectTemplate.css';
 
 const CATEGORIES = [
@@ -16,10 +17,13 @@ const CATEGORIES = [
 
 const SelectTemplate = () => {
     const navigate = useNavigate();
-    const { selectedTemplate, setSelectedTemplate, cvData } = useCV();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const sampleFromQuery = searchParams.get('sample') === '1';
+    const { selectedTemplate, setSelectedTemplate, setCvData } = useCV();
     const [activeCategory, setActiveCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [hoveredTemplate, setHoveredTemplate] = useState(null);
+    const [useSampleData, setUseSampleData] = useState(sampleFromQuery);
 
     // Filter templates
     const filteredTemplates = useMemo(() => {
@@ -43,8 +47,25 @@ const SelectTemplate = () => {
 
     const handleContinue = () => {
         if (selectedTemplate) {
+            if (useSampleData) {
+                const sample = getSampleCVData();
+                setCvData((prev) => ({
+                    ...prev,
+                    ...sample,
+                    selectedTemplate,
+                }));
+            }
             navigate('/editor');
         }
+    };
+
+    const toggleSample = () => {
+        const next = !useSampleData;
+        setUseSampleData(next);
+        const nextParams = new URLSearchParams(searchParams);
+        if (next) nextParams.set('sample', '1');
+        else nextParams.delete('sample');
+        setSearchParams(nextParams);
     };
 
     return (
@@ -91,6 +112,15 @@ const SelectTemplate = () => {
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
+
+                    <button
+                        type="button"
+                        className={`sample-toggle ${useSampleData ? 'active' : ''}`}
+                        onClick={toggleSample}
+                    >
+                        <span className="sample-toggle-title">Rellenar con datos de ejemplo</span>
+                        <span className="sample-toggle-subtitle">Ideal para empezar desde cero y luego editar</span>
+                    </button>
                 </div>
 
                 {/* Templates Grid */}

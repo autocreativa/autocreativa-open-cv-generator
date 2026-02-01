@@ -222,10 +222,11 @@
 /* Footer */
 .modal-footer {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     gap: var(--space-3);
     padding: var(--space-4) var(--space-6);
     border-top: 1px solid var(--border-light);
+    flex-wrap: wrap;
 }
 
 /* Responsive */
@@ -247,5 +248,9 @@
         order: 3;
         margin-left: 34px;
         margin-top: var(--space-2);
+    }
+
+    .modal-footer {
+        justify-content: center;
     }
 }

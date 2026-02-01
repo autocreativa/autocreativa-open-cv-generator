@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Edit3 } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Edit3, LayoutTemplate } from 'lucide-react';
 import OnboardingModal from '../../components/onboarding/OnboardingModal';
 import ChatInterface from '../../components/onboarding/ChatInterface';
 import Button from '../../components/common/Button';
@@ -42,9 +42,25 @@ const CreateCV = () => {
         }, 2000);
     };
 
+    const handleChatCompleteWithSections = (data) => {
+        setCvData((prev) => ({ ...prev, ...data }));
+        setSelectedSectionsLocal(selectedSectionsLocal);
+        setSelectedSections(selectedSectionsLocal);
+        setChatComplete(true);
+
+        // Redirigir a seleccionar plantilla después de un momento
+        setTimeout(() => {
+            navigate('/seleccionar-plantilla');
+        }, 2000);
+    };
+
     const handleSwitchToManual = () => {
         setMode('manual');
         navigate('/editor');
+    };
+
+    const handleStartWithSampleTemplate = () => {
+        navigate('/seleccionar-plantilla?sample=1');
     };
 
     return (
@@ -54,6 +70,7 @@ const CreateCV = () => {
                 isOpen={showOnboarding}
                 onClose={() => navigate('/')}
                 onComplete={handleOnboardingComplete}
+                onStartWithSampleTemplate={handleStartWithSampleTemplate}
             />
 
             {/* Main Content */}
@@ -75,14 +92,24 @@ const CreateCV = () => {
                         </div>
 
                         {mode === 'chat' && !chatComplete && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                leftIcon={<Edit3 size={16} />}
-                                onClick={handleSwitchToManual}
-                            >
-                                Editar manualmente
-                            </Button>
+                            <>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    leftIcon={<LayoutTemplate size={16} />}
+                                    onClick={handleStartWithSampleTemplate}
+                                >
+                                    Empezar con plantilla y datos de ejemplo
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    leftIcon={<Edit3 size={16} />}
+                                    onClick={handleSwitchToManual}
+                                >
+                                    Editar manualmente
+                                </Button>
+                            </>
                         )}
                     </div>
 
@@ -90,8 +117,9 @@ const CreateCV = () => {
                     <div className="chat-wrapper">
                         <ChatInterface
                             sections={selectedSectionsLocal}
-                            onComplete={handleChatComplete}
+                            onComplete={handleChatCompleteWithSections}
                             initialData={cvData}
+                            onStartWithSampleTemplate={handleStartWithSampleTemplate}
                         />
                     </div>
 
