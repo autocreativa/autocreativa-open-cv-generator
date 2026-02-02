@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bug, ArrowLeft, Send, CheckCircle, AlertCircle } from 'lucide-react';
 import Button from '../../components/common/Button';
@@ -14,6 +14,53 @@ const Support = () => {
     });
     const [status, setStatus] = useState({ type: null, message: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+    const recaptchaBypass = String(import.meta.env.VITE_RECAPTCHA_BYPASS || '').toLowerCase() === 'true';
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+
+    useEffect(() => {
+        if (!siteKey) return;
+        const existing = document.querySelector('script[data-recaptcha-enterprise="true"]');
+        if (existing) return;
+
+        const script = document.createElement('script');
+        script.src = `https://www.google.com/recaptcha/enterprise.js?render=${encodeURIComponent(siteKey)}`;
+        script.async = true;
+        script.defer = true;
+        script.setAttribute('data-recaptcha-enterprise', 'true');
+        document.head.appendChild(script);
+    }, [siteKey]);
+
+    const getRecaptchaToken = async () => {
+        if (recaptchaBypass) return 'bypass';
+        if (!siteKey) {
+            throw new Error('reCAPTCHA no está configurado. Revisa VITE_RECAPTCHA_SITE_KEY.');
+        }
+
+        const grecaptcha = window.grecaptcha;
+        if (!grecaptcha?.enterprise?.ready || !grecaptcha?.enterprise?.execute) {
+            throw new Error('reCAPTCHA no está listo. Intenta nuevamente en unos segundos.');
+        }
+
+        const token = await new Promise((resolve, reject) => {
+            try {
+                grecaptcha.enterprise.ready(async () => {
+                    try {
+                        const t = await grecaptcha.enterprise.execute(siteKey, { action: 'support' });
+                        resolve(t);
+                    } catch (err) {
+                        reject(err);
+                    }
+                });
+            } catch (err) {
+                reject(err);
+            }
+        });
+
+        if (!token) throw new Error('No se pudo obtener el token de reCAPTCHA.');
+        return token;
+    };
 
     const handleChange = (e) => {
         setFormData((prev) => ({
@@ -40,11 +87,13 @@ const Support = () => {
         setStatus({ type: null, message: '' });
 
         try {
-            const res = await fetch('/api/support', {
+            const recaptchaToken = await getRecaptchaToken();
+            const res = await fetch(`${apiBaseUrl}/api/support`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ...formData,
+                    recaptchaToken,
                     pageUrl: window.location.href,
                     userAgent: navigator.userAgent,
                 }),
@@ -184,6 +233,12 @@ const Support = () => {
                                     placeholder="Describe el problema o tu sugerencia (pasos para reproducir, navegador, etc.)"
                                     required
                                 />
+                            </div>
+
+                            <div className="form-group">
+                                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                                    Este formulario está protegido por reCAPTCHA.
+                                </div>
                             </div>
 
                             {status.message && (

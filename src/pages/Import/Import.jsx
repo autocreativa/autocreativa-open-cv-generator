@@ -17,38 +17,45 @@ const Import = () => {
     const pdf = usePDFReader();
     const ocr = useOCRReader();
 
-    const [mode, setMode] = useState('pdf'); // 'pdf' | 'ocr'
+    const [mode, setMode] = useState('file'); // 'file' | 'camera'
     const [selectedFile, setSelectedFile] = useState(null);
     const [selectedImage, setSelectedImage] = useState(null);
     const [showPreview, setShowPreview] = useState(false);
 
     useEffect(() => {
         if (searchParams.get('mode') === 'ocr') {
-            setMode('ocr');
+            setMode('camera');
         }
     }, [searchParams]);
 
-    const active = mode === 'ocr' ? ocr : pdf;
+    const fileIsImage = selectedFile && /^image\//i.test(selectedFile.type);
+    const active = mode === 'camera' ? ocr : (fileIsImage ? ocr : pdf);
     const activeCvData = active.cvData;
 
     const handleFileSelect = (file) => {
         setSelectedFile(file);
+        setSelectedImage(null);
+        setShowPreview(false);
         pdf.reset();
+        ocr.reset();
     };
 
     const handleImageSelect = (file) => {
         setSelectedImage(file);
+        setSelectedFile(null);
+        setShowPreview(false);
         ocr.reset();
+        pdf.reset();
     };
 
     const handleProcess = async () => {
-        if (mode === 'pdf' && !selectedFile) return;
-        if (mode === 'ocr' && !selectedImage) return;
+        if (mode === 'file' && !selectedFile) return;
+        if (mode === 'camera' && !selectedImage) return;
 
         try {
-            const extractedData = mode === 'ocr'
+            const extractedData = mode === 'camera'
                 ? await ocr.processImage(selectedImage)
-                : await pdf.processPDF(selectedFile);
+                : (fileIsImage ? await ocr.processImage(selectedFile) : await pdf.processPDF(selectedFile));
             if (extractedData) {
                 setShowPreview(true);
             }
@@ -122,28 +129,28 @@ const Import = () => {
                             <div className="import-mode-tabs" role="tablist" aria-label="Modo de importación">
                                 <button
                                     type="button"
-                                    className={`import-mode-tab ${mode === 'pdf' ? 'active' : ''}`}
+                                    className={`import-mode-tab ${mode === 'file' ? 'active' : ''}`}
                                     onClick={() => {
-                                        setMode('pdf');
+                                        setMode('file');
                                         setShowPreview(false);
                                     }}
                                 >
-                                    PDF
+                                    Archivo (PDF o imagen)
                                 </button>
                                 <button
                                     type="button"
-                                    className={`import-mode-tab ${mode === 'ocr' ? 'active' : ''}`}
+                                    className={`import-mode-tab ${mode === 'camera' ? 'active' : ''}`}
                                     onClick={() => {
-                                        setMode('ocr');
+                                        setMode('camera');
                                         setShowPreview(false);
                                     }}
                                 >
-                                    Foto (OCR)
+                                    Tomar foto
                                 </button>
                             </div>
 
                             {/* Uploader */}
-                            {mode === 'pdf' ? (
+                            {mode === 'file' ? (
                                 <PDFUploader
                                     onFileSelect={handleFileSelect}
                                     disabled={active.isLoading}
@@ -178,11 +185,11 @@ const Import = () => {
                                 <Button
                                     size="lg"
                                     onClick={handleProcess}
-                                    disabled={(mode === 'pdf' ? !selectedFile : !selectedImage) || active.isLoading}
+                                    disabled={(mode === 'file' ? !selectedFile : !selectedImage) || active.isLoading}
                                     loading={active.isLoading}
-                                    leftIcon={mode === 'ocr' ? <ImageIcon size={18} /> : undefined}
+                                    leftIcon={(mode === 'camera' || (mode === 'file' && fileIsImage)) ? <ImageIcon size={18} /> : undefined}
                                 >
-                                    {active.isLoading ? 'Procesando...' : (mode === 'ocr' ? 'Analizar foto con OCR' : 'Analizar con IA')}
+                                    {active.isLoading ? 'Procesando...' : ((mode === 'camera' || (mode === 'file' && fileIsImage)) ? 'Analizar imagen con OCR' : 'Analizar PDF con IA')}
                                 </Button>
                             </div>
 

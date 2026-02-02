@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, CheckCircle, Circle, ArrowRight, Sparkles, LayoutTemplate } from 'lucide-react';
+import { X, CheckCircle, Circle, ArrowRight, Sparkles, LayoutTemplate, Image as ImageIcon } from 'lucide-react';
 import Button from '../../common/Button';
 import { CV_SECTIONS, REQUIRED_SECTIONS } from '../../../utils/constants';
 import './OnboardingModal.css';
@@ -11,7 +11,7 @@ import './OnboardingModal.css';
  * @param {Function} props.onClose - Callback al cerrar
  * @param {Function} props.onComplete - Callback al completar con secciones seleccionadas
  */
-const OnboardingModal = ({ isOpen, onClose, onComplete, onStartWithSampleTemplate }) => {
+const OnboardingModal = ({ isOpen, onClose, onComplete, onStartWithSampleTemplate, onOpenOcr }) => {
     const [step, setStep] = useState(1);
     const [selectedSections, setSelectedSections] = useState([...REQUIRED_SECTIONS]);
 
@@ -136,6 +136,14 @@ const OnboardingModal = ({ isOpen, onClose, onComplete, onStartWithSampleTemplat
 
                 {/* Footer */}
                 <div className="modal-footer">
+                    <Button
+                        variant="ghost"
+                        onClick={onOpenOcr}
+                        disabled={!onOpenOcr}
+                        leftIcon={<ImageIcon size={18} />}
+                    >
+                        Extraer info de una imagen
+                    </Button>
                     <Button
                         variant="ghost"
                         onClick={onStartWithSampleTemplate}

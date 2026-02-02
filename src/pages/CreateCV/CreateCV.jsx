@@ -1,24 +1,30 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Edit3, LayoutTemplate, Loader2 } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Edit3, LayoutTemplate, Loader2, Image as ImageIcon, X } from 'lucide-react';
 import OnboardingModal from '../../components/onboarding/OnboardingModal';
 import ChatInterface from '../../components/onboarding/ChatInterface';
+import ImageUploader from '../../components/pdf/ImageUploader';
 import Button from '../../components/common/Button';
 import { useCV } from '../../context/CVContext';
 import { REQUIRED_SECTIONS } from '../../utils/constants';
 import { cleanOnboardingCvData } from '../../services/openRouterService';
+import { useOCRReader } from '../../hooks/useOCRReader';
 import './CreateCV.css';
 
 const CreateCV = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const { cvData, setCvData, setSelectedSections } = useCV();
+    const ocr = useOCRReader();
 
     const [showOnboarding, setShowOnboarding] = useState(true);
     const [selectedSectionsLocal, setSelectedSectionsLocal] = useState([...REQUIRED_SECTIONS]);
     const [mode, setMode] = useState('chat'); // 'chat' | 'manual'
     const [chatComplete, setChatComplete] = useState(false);
     const [completionStatus, setCompletionStatus] = useState('idle'); // 'idle' | 'processing' | 'redirecting'
+    const [showOcrModal, setShowOcrModal] = useState(false);
+    const [selectedOcrImage, setSelectedOcrImage] = useState(null);
+    const [chatInstanceKey, setChatInstanceKey] = useState(1);
 
     // Si viene de importar PDF, saltar onboarding
     useEffect(() => {
@@ -83,6 +89,32 @@ const CreateCV = () => {
         navigate('/seleccionar-plantilla?sample=1');
     };
 
+    const handleOpenOcr = () => {
+        setSelectedOcrImage(null);
+        ocr.reset();
+        setShowOcrModal(true);
+    };
+
+    const handleRunOcr = async () => {
+        if (!selectedOcrImage) return;
+        try {
+            const extracted = await ocr.processImage(selectedOcrImage);
+            if (extracted) {
+                setCvData((prev) => ({
+                    ...prev,
+                    ...extracted,
+                    onboardingSource: 'ocr',
+                }));
+                setShowOcrModal(false);
+                setChatComplete(false);
+                setCompletionStatus('idle');
+                setChatInstanceKey((k) => k + 1);
+            }
+        } catch {
+            // Los errores se reflejan en ocr.error
+        }
+    };
+
     return (
         <main className="create-cv-page">
             {/* Onboarding Modal */}
@@ -91,6 +123,7 @@ const CreateCV = () => {
                 onClose={() => navigate('/')}
                 onComplete={handleOnboardingComplete}
                 onStartWithSampleTemplate={handleStartWithSampleTemplate}
+                onOpenOcr={handleOpenOcr}
             />
 
             {/* Main Content */}
@@ -116,6 +149,14 @@ const CreateCV = () => {
                                 <Button
                                     variant="ghost"
                                     size="sm"
+                                    leftIcon={<ImageIcon size={16} />}
+                                    onClick={handleOpenOcr}
+                                >
+                                    Extraer info de una imagen
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
                                     leftIcon={<LayoutTemplate size={16} />}
                                     onClick={handleStartWithSampleTemplate}
                                 >
@@ -136,6 +177,7 @@ const CreateCV = () => {
                     {/* Chat Interface */}
                     <div className="chat-wrapper">
                         <ChatInterface
+                            key={chatInstanceKey}
                             sections={selectedSectionsLocal}
                             onComplete={handleChatCompleteWithSections}
                             initialData={cvData}
@@ -159,6 +201,67 @@ const CreateCV = () => {
                             </div>
                         </div>
                     )}
+                </div>
+            )}
+
+            {showOcrModal && (
+                <div className="ocr-overlay" role="dialog" aria-modal="true">
+                    <div className="ocr-modal">
+                        <div className="ocr-modal-header">
+                            <div className="ocr-modal-title">
+                                <ImageIcon size={20} />
+                                <span>Extraer información desde imagen</span>
+                            </div>
+                            <button
+                                className="ocr-close-btn"
+                                onClick={() => setShowOcrModal(false)}
+                                aria-label="Cerrar"
+                                type="button"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <div className="ocr-modal-body">
+                            <ImageUploader
+                                onFileSelect={(file) => setSelectedOcrImage(file)}
+                                disabled={ocr.isLoading}
+                                error={ocr.error}
+                            />
+
+                            {ocr.isLoading && (
+                                <div className="ocr-progress">
+                                    <div className="progress-bar">
+                                        <div
+                                            className="progress-fill"
+                                            style={{ width: `${ocr.progress.percent}%` }}
+                                        />
+                                    </div>
+                                    <div className="progress-info">
+                                        <Loader2 size={16} className="animate-spin" />
+                                        <span>{ocr.progress.step}</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="ocr-modal-actions">
+                            <Button
+                                variant="outline"
+                                onClick={() => setShowOcrModal(false)}
+                                disabled={ocr.isLoading}
+                            >
+                                Cancelar
+                            </Button>
+                            <Button
+                                onClick={handleRunOcr}
+                                disabled={!selectedOcrImage || ocr.isLoading}
+                                loading={ocr.isLoading}
+                            >
+                                Analizar imagen con OCR
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             )}
         </main>

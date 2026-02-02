@@ -34,7 +34,7 @@ const PDFUploader = ({ onFileSelect, disabled = false, error = null }) => {
         if (disabled) return;
 
         const file = e.dataTransfer.files[0];
-        if (file && file.type === 'application/pdf') {
+        if (file && (file.type === 'application/pdf' || /^image\//i.test(file.type))) {
             setSelectedFile(file);
             onFileSelect?.(file);
         }
@@ -80,7 +80,7 @@ const PDFUploader = ({ onFileSelect, disabled = false, error = null }) => {
                 <input
                     ref={inputRef}
                     type="file"
-                    accept="application/pdf"
+                    accept="application/pdf,image/*"
                     onChange={handleFileChange}
                     className="upload-input"
                     disabled={disabled}
@@ -109,13 +109,13 @@ const PDFUploader = ({ onFileSelect, disabled = false, error = null }) => {
                             <FileUp size={48} />
                         </div>
                         <p className="upload-title">
-                            Arrastra tu PDF aquí
+                            Arrastra tu archivo aquí
                         </p>
                         <p className="upload-subtitle">
                             o haz clic para seleccionar
                         </p>
                         <span className="upload-hint">
-                            Formatos: PDF (máx. 5MB)
+                            Formatos: PDF o imagen (JPG/PNG/WebP)
                         </span>
                     </div>
                 )}
