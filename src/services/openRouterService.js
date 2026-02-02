@@ -50,6 +50,56 @@ export const callOpenRouter = async (messages, options = {}) => {
     }
 };
 
+export const cleanOnboardingCvData = async (cvData) => {
+    const systemPrompt = `Eres un experto en normalización de datos de currículum.
+
+Devuelve SOLO un JSON válido (sin markdown, sin explicaciones) con la siguiente estructura:
+{
+  "contactInfo": {
+    "address": "",
+    "city": "",
+    "country": ""
+  }
+}
+
+Reglas:
+- No inventes calle y número si no están.
+- Si el usuario dice "en Talca" o similar, elimina el "en" y devuelve ciudad/país normalizados.
+- Si es posible, completa país y región/estado dentro de "address" usando el formato: "País, Región/Estado, Ciudad".
+- Mantén la información original si no puedes mejorarla.
+- Responde en español.`;
+
+    const payload = {
+        contactInfo: {
+            address: cvData?.contactInfo?.address || '',
+            city: cvData?.contactInfo?.city || '',
+            country: cvData?.contactInfo?.country || '',
+        },
+    };
+
+    try {
+        const messages = [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: `Normaliza estos datos:\n${JSON.stringify(payload, null, 2)}` },
+        ];
+
+        const response = await callOpenRouter(messages, { temperature: 0.2, maxTokens: 250 });
+        const cleanJson = response.replace(/```json\n?|\n?```/g, '').trim();
+        const parsed = JSON.parse(cleanJson);
+
+        return {
+            ...cvData,
+            contactInfo: {
+                ...(cvData?.contactInfo || {}),
+                ...(parsed?.contactInfo || {}),
+            },
+        };
+    } catch (error) {
+        console.error('Error cleaning onboarding CV data:', error);
+        return cvData;
+    }
+};
+
 /**
  * Extraer datos estructurados de un CV en texto
  * @param {string} pdfText - Texto extraído del PDF
@@ -278,6 +328,7 @@ ${JSON.stringify(collectedData, null, 2)}`;
 export default {
     callOpenRouter,
     extractCVFromText,
+    cleanOnboardingCvData,
     improveTextWithAI,
     getImprovementSuggestions,
     generateCoverLetter,

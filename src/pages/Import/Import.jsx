@@ -1,30 +1,54 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Sparkles, FileText, CheckCircle, LayoutTemplate } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Sparkles, FileText, CheckCircle, LayoutTemplate, Image as ImageIcon } from 'lucide-react';
 import PDFUploader from '../../components/pdf/PDFUploader';
+import ImageUploader from '../../components/pdf/ImageUploader';
 import Button from '../../components/common/Button';
 import { usePDFReader } from '../../hooks/usePDFReader';
+import { useOCRReader } from '../../hooks/useOCRReader';
 import { useCV } from '../../context/CVContext';
 import { getSampleCVData } from '../../utils/constants';
 import './Import.css';
 
 const Import = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { setCVData, setSelectedSections } = useCV();
-    const { isLoading, error, progress, cvData, processPDF, reset } = usePDFReader();
+    const pdf = usePDFReader();
+    const ocr = useOCRReader();
+
+    const [mode, setMode] = useState('pdf'); // 'pdf' | 'ocr'
     const [selectedFile, setSelectedFile] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(null);
     const [showPreview, setShowPreview] = useState(false);
+
+    useEffect(() => {
+        if (searchParams.get('mode') === 'ocr') {
+            setMode('ocr');
+        }
+    }, [searchParams]);
+
+    const active = mode === 'ocr' ? ocr : pdf;
+    const activeCvData = active.cvData;
 
     const handleFileSelect = (file) => {
         setSelectedFile(file);
-        reset();
+        pdf.reset();
+    };
+
+    const handleImageSelect = (file) => {
+        setSelectedImage(file);
+        ocr.reset();
     };
 
     const handleProcess = async () => {
-        if (!selectedFile) return;
+        if (mode === 'pdf' && !selectedFile) return;
+        if (mode === 'ocr' && !selectedImage) return;
 
         try {
-            const extractedData = await processPDF(selectedFile);
+            const extractedData = mode === 'ocr'
+                ? await ocr.processImage(selectedImage)
+                : await pdf.processPDF(selectedFile);
             if (extractedData) {
                 setShowPreview(true);
             }
@@ -34,10 +58,10 @@ const Import = () => {
     };
 
     const handleConfirm = () => {
-        if (cvData) {
+        if (activeCvData) {
             // Guardar datos en el contexto
             setCVData({
-                ...cvData,
+                ...activeCvData,
                 id: crypto.randomUUID(),
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
@@ -45,15 +69,15 @@ const Import = () => {
 
             // Determinar secciones activas basadas en los datos extraídos
             const activeSections = ['contactInfo', 'workExperience', 'education'];
-            if (cvData.professionalSummary) activeSections.push('professionalSummary');
-            if (cvData.technicalSkills?.length) activeSections.push('technicalSkills');
-            if (cvData.languages?.length) activeSections.push('languages');
-            if (cvData.certifications?.length) activeSections.push('certifications');
+            if (activeCvData.professionalSummary) activeSections.push('professionalSummary');
+            if (activeCvData.technicalSkills?.length) activeSections.push('technicalSkills');
+            if (activeCvData.languages?.length) activeSections.push('languages');
+            if (activeCvData.certifications?.length) activeSections.push('certifications');
 
             setSelectedSections(activeSections);
 
             // Navegar a selección de plantilla
-            navigate('/seleccionar-plantilla');
+            navigate('/seleccionar-plantilla?from=import');
         }
     };
 
@@ -66,7 +90,7 @@ const Import = () => {
             updatedAt: new Date().toISOString(),
         });
         setSelectedSections(sampleData.selectedSections);
-        navigate('/seleccionar-plantilla');
+        navigate('/seleccionar-plantilla?from=import');
     };
 
     return (
@@ -88,32 +112,63 @@ const Import = () => {
                         </div>
                         <h1 className="import-title">Importa tu CV existente</h1>
                         <p className="import-description">
-                            Sube tu currículum en PDF y nuestra IA extraerá automáticamente
-                            toda tu información para que puedas editarla y mejorarla.
+                            Sube tu currículum en PDF o una foto/imagen (OCR) y nuestra IA extraerá automáticamente
+                            tu información para que puedas editarla y mejorarla.
                         </p>
                     </div>
 
                     {!showPreview ? (
                         <>
+                            <div className="import-mode-tabs" role="tablist" aria-label="Modo de importación">
+                                <button
+                                    type="button"
+                                    className={`import-mode-tab ${mode === 'pdf' ? 'active' : ''}`}
+                                    onClick={() => {
+                                        setMode('pdf');
+                                        setShowPreview(false);
+                                    }}
+                                >
+                                    PDF
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`import-mode-tab ${mode === 'ocr' ? 'active' : ''}`}
+                                    onClick={() => {
+                                        setMode('ocr');
+                                        setShowPreview(false);
+                                    }}
+                                >
+                                    Foto (OCR)
+                                </button>
+                            </div>
+
                             {/* Uploader */}
-                            <PDFUploader
-                                onFileSelect={handleFileSelect}
-                                disabled={isLoading}
-                                error={error}
-                            />
+                            {mode === 'pdf' ? (
+                                <PDFUploader
+                                    onFileSelect={handleFileSelect}
+                                    disabled={active.isLoading}
+                                    error={active.error}
+                                />
+                            ) : (
+                                <ImageUploader
+                                    onFileSelect={handleImageSelect}
+                                    disabled={active.isLoading}
+                                    error={active.error}
+                                />
+                            )}
 
                             {/* Progress */}
-                            {isLoading && (
+                            {active.isLoading && (
                                 <div className="progress-section">
                                     <div className="progress-bar">
                                         <div
                                             className="progress-fill"
-                                            style={{ width: `${progress.percent}%` }}
+                                            style={{ width: `${active.progress.percent}%` }}
                                         />
                                     </div>
                                     <div className="progress-info">
                                         <Sparkles size={16} className="animate-pulse" />
-                                        <span>{progress.step}</span>
+                                        <span>{active.progress.step}</span>
                                     </div>
                                 </div>
                             )}
@@ -123,10 +178,11 @@ const Import = () => {
                                 <Button
                                     size="lg"
                                     onClick={handleProcess}
-                                    disabled={!selectedFile || isLoading}
-                                    loading={isLoading}
+                                    disabled={(mode === 'pdf' ? !selectedFile : !selectedImage) || active.isLoading}
+                                    loading={active.isLoading}
+                                    leftIcon={mode === 'ocr' ? <ImageIcon size={18} /> : undefined}
                                 >
-                                    {isLoading ? 'Procesando...' : 'Analizar con IA'}
+                                    {active.isLoading ? 'Procesando...' : (mode === 'ocr' ? 'Analizar foto con OCR' : 'Analizar con IA')}
                                 </Button>
                             </div>
 
@@ -151,35 +207,44 @@ const Import = () => {
                             </div>
 
                             <div className="preview-data">
-                                {cvData?.contactInfo?.fullName && (
+                                {activeCvData?.contactInfo?.fullName && (
                                     <div className="preview-item">
-                                        <strong>Nombre:</strong> {cvData.contactInfo.fullName}
+                                        <strong>Nombre:</strong> {activeCvData.contactInfo.fullName}
                                     </div>
                                 )}
-                                {cvData?.contactInfo?.email && (
+                                {activeCvData?.contactInfo?.email && (
                                     <div className="preview-item">
-                                        <strong>Email:</strong> {cvData.contactInfo.email}
+                                        <strong>Email:</strong> {activeCvData.contactInfo.email}
                                     </div>
                                 )}
-                                {cvData?.workExperience?.length > 0 && (
+                                {activeCvData?.workExperience?.length > 0 && (
                                     <div className="preview-item">
-                                        <strong>Experiencias:</strong> {cvData.workExperience.length} encontradas
+                                        <strong>Experiencias:</strong> {activeCvData.workExperience.length} encontradas
                                     </div>
                                 )}
-                                {cvData?.education?.length > 0 && (
+                                {activeCvData?.education?.length > 0 && (
                                     <div className="preview-item">
-                                        <strong>Estudios:</strong> {cvData.education.length} encontrados
+                                        <strong>Estudios:</strong> {activeCvData.education.length} encontrados
                                     </div>
                                 )}
-                                {cvData?.technicalSkills?.length > 0 && (
+                                {activeCvData?.technicalSkills?.length > 0 && (
                                     <div className="preview-item">
-                                        <strong>Habilidades:</strong> {cvData.technicalSkills.length} encontradas
+                                        <strong>Habilidades:</strong> {activeCvData.technicalSkills.length} encontradas
                                     </div>
                                 )}
                             </div>
 
                             <div className="preview-actions">
-                                <Button variant="outline" onClick={() => setShowPreview(false)}>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        setShowPreview(false);
+                                        setSelectedFile(null);
+                                        setSelectedImage(null);
+                                        pdf.reset();
+                                        ocr.reset();
+                                    }}
+                                >
                                     Subir otro archivo
                                 </Button>
                                 <Button variant="ghost" onClick={handleStartWithSample} leftIcon={<LayoutTemplate size={18} />}>

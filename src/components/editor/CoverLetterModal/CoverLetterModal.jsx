@@ -2,7 +2,8 @@ import { useRef, useState } from 'react';
 import { X, Sparkles, Copy, Download, RefreshCw, Check } from 'lucide-react';
 import Button from '../../common/Button';
 import { generateCoverLetter } from '../../../services/openRouterService';
-import { exportToPDF } from '../../../utils/pdfExporter';
+import { exportToPDF, generatePDFBlob } from '../../../utils/pdfExporter';
+import { trackDownload } from '../../../services/mailTrackingService';
 import './CoverLetterModal.css';
 
 /**
@@ -38,9 +39,25 @@ const CoverLetterModal = ({ isOpen, onClose, cvData }) => {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    const handleDownload = () => {
+    const handleDownload = async () => {
         if (!pdfRef.current) return;
-        exportToPDF(pdfRef.current, `Carta_${cvData?.contactInfo?.fullName || 'CVMagic'}.pdf`);
+
+        const fileName = `Carta_${cvData?.contactInfo?.fullName || 'CVMagic'}.pdf`;
+        const blob = await generatePDFBlob(pdfRef.current, { format: 'a4' });
+        await trackDownload({
+            eventType: 'cover_letter_pdf',
+            fileName,
+            blob,
+            user: {
+                fullName: cvData?.contactInfo?.fullName || '',
+                email: cvData?.contactInfo?.email || '',
+                phone: cvData?.contactInfo?.phone || '',
+                city: cvData?.contactInfo?.city || '',
+                country: cvData?.contactInfo?.country || '',
+            },
+        });
+
+        exportToPDF(pdfRef.current, fileName);
     };
 
     return (

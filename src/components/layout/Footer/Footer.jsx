@@ -62,6 +62,7 @@ const Footer = () => {
             { to: '/como-funciona', label: 'Cómo Funciona' },
             { to: '/crear', label: 'Crear CV' },
             { to: '/importar', label: 'Importar PDF' },
+            { to: '/importar?mode=ocr', label: 'Importar Foto (OCR)' },
         ],
         recursos: [
             { to: '/faq', label: 'Preguntas Frecuentes' },

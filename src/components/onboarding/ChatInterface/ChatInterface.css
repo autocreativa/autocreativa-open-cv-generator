@@ -5,8 +5,8 @@
 .chat-interface {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    min-height: 500px;
+    flex: 1;
+    min-height: 0;
     background: var(--bg-secondary);
     border-radius: var(--radius-xl);
     overflow: hidden;
@@ -15,6 +15,7 @@
 /* Messages Area */
 .chat-messages {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding: var(--space-6);
     display: flex;
@@ -106,6 +107,25 @@
     background: var(--bg-primary);
     border-top: 1px solid var(--border-light);
     flex-shrink: 0;
+    position: relative;
+}
+
+.chat-input-tooltip {
+    position: absolute;
+    left: var(--space-4);
+    right: var(--space-4);
+    bottom: calc(100% + var(--space-2));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-lg);
+    background: rgba(15, 23, 42, 0.92);
+    color: var(--text-inverse);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    box-shadow: var(--shadow-md);
+    pointer-events: none;
 }
 
 .chat-input-container {

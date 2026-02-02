@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Edit3, LayoutTemplate } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Edit3, LayoutTemplate, Loader2 } from 'lucide-react';
 import OnboardingModal from '../../components/onboarding/OnboardingModal';
 import ChatInterface from '../../components/onboarding/ChatInterface';
 import Button from '../../components/common/Button';
 import { useCV } from '../../context/CVContext';
 import { REQUIRED_SECTIONS } from '../../utils/constants';
+import { cleanOnboardingCvData } from '../../services/openRouterService';
 import './CreateCV.css';
 
 const CreateCV = () => {
@@ -17,10 +18,12 @@ const CreateCV = () => {
     const [selectedSectionsLocal, setSelectedSectionsLocal] = useState([...REQUIRED_SECTIONS]);
     const [mode, setMode] = useState('chat'); // 'chat' | 'manual'
     const [chatComplete, setChatComplete] = useState(false);
+    const [completionStatus, setCompletionStatus] = useState('idle'); // 'idle' | 'processing' | 'redirecting'
 
     // Si viene de importar PDF, saltar onboarding
     useEffect(() => {
-        if (searchParams.get('from') === 'import' || Object.keys(cvData?.contactInfo || {}).length > 0) {
+        const hasAnyContactValue = Object.values(cvData?.contactInfo || {}).some((v) => String(v || '').trim());
+        if (searchParams.get('from') === 'import' || hasAnyContactValue) {
             setShowOnboarding(false);
             setMode('manual');
         }
@@ -42,16 +45,33 @@ const CreateCV = () => {
         }, 2000);
     };
 
-    const handleChatCompleteWithSections = (data) => {
-        setCvData((prev) => ({ ...prev, ...data }));
+    const handleChatCompleteWithSections = async (data) => {
+        setChatComplete(true);
+        setCompletionStatus('processing');
+
+        try {
+            const cleaned = await cleanOnboardingCvData(data);
+            setCvData((prev) => ({
+                ...prev,
+                ...cleaned,
+                onboardingSource: 'assistant',
+            }));
+        } catch {
+            setCvData((prev) => ({
+                ...prev,
+                ...data,
+                onboardingSource: 'assistant',
+            }));
+        }
+
         setSelectedSectionsLocal(selectedSectionsLocal);
         setSelectedSections(selectedSectionsLocal);
-        setChatComplete(true);
+        setCompletionStatus('redirecting');
 
         // Redirigir a seleccionar plantilla después de un momento
         setTimeout(() => {
-            navigate('/seleccionar-plantilla');
-        }, 2000);
+            navigate('/seleccionar-plantilla?from=assistant');
+        }, 1200);
     };
 
     const handleSwitchToManual = () => {
@@ -127,9 +147,15 @@ const CreateCV = () => {
                     {chatComplete && (
                         <div className="completion-overlay">
                             <div className="completion-content">
-                                <div className="completion-icon">🎉</div>
-                                <h2>¡Datos recopilados!</h2>
-                                <p>Redirigiendo al selector de plantillas...</p>
+                                <div className="completion-icon">
+                                    <Loader2 size={44} className="animate-spin" />
+                                </div>
+                                <h2>{completionStatus === 'processing' ? 'Procesando datos...' : '¡Listo!'}</h2>
+                                <p>
+                                    {completionStatus === 'processing'
+                                        ? 'Estamos preparando tu CV con ayuda de IA.'
+                                        : 'Redirigiendo al selector de plantillas...'}
+                                </p>
                             </div>
                         </div>
                     )}

@@ -14,6 +14,7 @@ import Privacy from './pages/Privacy';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import FAQ from './pages/FAQ';
+import Support from './pages/Support';
 import './index.css';
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
             <Route path="/sobre-nosotros" element={<About />} />
             <Route path="/contacto" element={<Contact />} />
             <Route path="/faq" element={<FAQ />} />
+            <Route path="/soporte" element={<Support />} />
 
             {/* 404 */}
             <Route path="*" element={<NotFound />} />

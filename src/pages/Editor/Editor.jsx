@@ -19,6 +19,7 @@ import { useCV } from '../../context/CVContext';
 import { templates, getTemplateComponent } from '../../templates';
 import { getImprovementSuggestions } from '../../services/openRouterService';
 import { exportToPDF, generatePDFBlob } from '../../utils/pdfExporter';
+import { trackDownload } from '../../services/mailTrackingService';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import './Editor.css';
@@ -152,6 +153,20 @@ const Editor = () => {
         setTimeout(async () => {
             const content = document.getElementById('cv-content');
             if (content) {
+                const blob = await generatePDFBlob(content, { format: pageSize });
+                await trackDownload({
+                    eventType: 'cv_pdf',
+                    fileName: `CV_${cvData?.contactInfo?.fullName || 'Profesional'}.pdf`,
+                    blob,
+                    user: {
+                        fullName: cvData?.contactInfo?.fullName || '',
+                        email: cvData?.contactInfo?.email || '',
+                        phone: cvData?.contactInfo?.phone || '',
+                        city: cvData?.contactInfo?.city || '',
+                        country: cvData?.contactInfo?.country || '',
+                    },
+                });
+
                 const success = await exportToPDF(
                     content,
                     `CV_${cvData?.contactInfo?.fullName || 'Profesional'}.pdf`,
@@ -164,6 +179,20 @@ const Editor = () => {
                 // Fallback if id not found (templates should have id="cv-content")
                 const previewEl = document.querySelector('.cv-preview > div');
                 if (previewEl) {
+                    const blob = await generatePDFBlob(previewEl, { format: pageSize });
+                    await trackDownload({
+                        eventType: 'cv_pdf',
+                        fileName: `CV_${cvData?.contactInfo?.fullName || 'Profesional'}.pdf`,
+                        blob,
+                        user: {
+                            fullName: cvData?.contactInfo?.fullName || '',
+                            email: cvData?.contactInfo?.email || '',
+                            phone: cvData?.contactInfo?.phone || '',
+                            city: cvData?.contactInfo?.city || '',
+                            country: cvData?.contactInfo?.country || '',
+                        },
+                    });
+
                     await exportToPDF(
                         previewEl,
                         `CV_${cvData?.contactInfo?.fullName || 'Profesional'}.pdf`,

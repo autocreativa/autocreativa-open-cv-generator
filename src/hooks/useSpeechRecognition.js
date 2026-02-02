@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 
 /**
  * Hook para manejar reconocimiento de voz con Web Speech API
@@ -10,6 +10,10 @@ export const useSpeechRecognition = (lang = 'es-ES') => {
     const [transcript, setTranscript] = useState('');
     const [interimTranscript, setInterimTranscript] = useState('');
     const [error, setError] = useState(null);
+
+    const isListeningRef = useRef(false);
+    const lastInterimRef = useRef('');
+    const finalTranscriptRef = useRef('');
 
     // Verificar soporte del navegador
     const isSupported = useMemo(() => {
@@ -23,8 +27,9 @@ export const useSpeechRecognition = (lang = 'es-ES') => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const recognizer = new SpeechRecognition();
 
-        recognizer.continuous = false;
+        recognizer.continuous = true;
         recognizer.interimResults = true;
+        recognizer.maxAlternatives = 1;
         recognizer.lang = lang;
 
         return recognizer;
@@ -37,24 +42,68 @@ export const useSpeechRecognition = (lang = 'es-ES') => {
             return;
         }
 
+        if (isListeningRef.current) return;
+
         setTranscript('');
         setInterimTranscript('');
         setError(null);
+        lastInterimRef.current = '';
+        finalTranscriptRef.current = '';
 
-        try {
-            recognition.start();
-            setIsListening(true);
-        } catch (err) {
-            setError('Error al iniciar el reconocimiento de voz');
-            console.error('Speech recognition start error:', err);
-        }
+        const warmupAndStart = async () => {
+            if (navigator?.mediaDevices?.getUserMedia) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    stream.getTracks().forEach((t) => t.stop());
+                } catch {
+                    setError('Permiso de micrófono denegado.');
+                    return;
+                }
+            }
+
+            try {
+                recognition.start();
+            } catch (err) {
+                const msg = String(err?.message || err);
+                if (/invalidstateerror/i.test(msg) || /start\(\) failed/i.test(msg)) {
+                    try {
+                        recognition.stop();
+                    } catch {
+                        // ignore
+                    }
+                    setTimeout(() => {
+                        try {
+                            recognition.start();
+                        } catch (retryErr) {
+                            setError('Error al iniciar el reconocimiento de voz');
+                            console.error('Speech recognition retry error:', retryErr);
+                        }
+                    }, 250);
+                    return;
+                }
+
+                setError('Error al iniciar el reconocimiento de voz');
+                console.error('Speech recognition start error:', err);
+            }
+        };
+
+        void warmupAndStart();
     }, [recognition]);
 
     // Detener reconocimiento
     const stopListening = useCallback(() => {
         if (recognition) {
-            recognition.stop();
+            try {
+                recognition.stop();
+            } catch {
+                try {
+                    recognition.abort();
+                } catch {
+                    // ignore
+                }
+            }
             setIsListening(false);
+            isListeningRef.current = false;
         }
     }, [recognition]);
 
@@ -83,23 +132,43 @@ export const useSpeechRecognition = (lang = 'es-ES') => {
             }
 
             if (finalTranscript) {
-                setTranscript((prev) => prev + finalTranscript);
+                finalTranscriptRef.current = `${finalTranscriptRef.current}${finalTranscript}`;
+                setTranscript(finalTranscriptRef.current);
             }
-            setInterimTranscript(interim);
+
+            if (interim) {
+                lastInterimRef.current = interim;
+                setInterimTranscript(interim);
+            }
         };
 
         const handleEnd = () => {
             setIsListening(false);
+            isListeningRef.current = false;
+
+            // Si no llegó ningún resultado final, mantener lo último dictado (interim)
+            if (!finalTranscriptRef.current && lastInterimRef.current) {
+                finalTranscriptRef.current = lastInterimRef.current;
+                setTranscript(lastInterimRef.current);
+            }
+
             setInterimTranscript('');
+        };
+
+        const handleStart = () => {
+            setIsListening(true);
+            isListeningRef.current = true;
         };
 
         const handleError = (event) => {
             setIsListening(false);
+            isListeningRef.current = false;
 
             const errorMessages = {
                 'no-speech': 'No se detectó ninguna voz. Intenta de nuevo.',
                 'audio-capture': 'No se pudo capturar audio. Verifica el micrófono.',
                 'not-allowed': 'Permiso de micrófono denegado.',
+                'service-not-allowed': 'Permiso de micrófono denegado.',
                 'network': 'Error de red. Verifica tu conexión.',
                 'aborted': 'El reconocimiento fue cancelado.',
                 'language-not-supported': 'Idioma no soportado.',
@@ -109,11 +178,13 @@ export const useSpeechRecognition = (lang = 'es-ES') => {
         };
 
         recognition.onresult = handleResult;
+        recognition.onstart = handleStart;
         recognition.onend = handleEnd;
         recognition.onerror = handleError;
 
         return () => {
             recognition.onresult = null;
+            recognition.onstart = null;
             recognition.onend = null;
             recognition.onerror = null;
         };

@@ -9,7 +9,7 @@ const HowItWorks = () => {
             number: '01',
             icon: FileUp,
             title: 'Elige cómo empezar',
-            description: 'Importa tu CV existente en PDF o créalo desde cero con nuestro asistente conversacional.',
+            description: 'Importa tu CV existente en PDF o una foto/imagen (OCR), o créalo desde cero con nuestro asistente conversacional.',
         },
         {
             number: '02',

@@ -5,6 +5,11 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: '/cv-generator/',
+  server: {
+    proxy: {
+      '/api': 'http://localhost:5174',
+    },
+  },
   build: {
     outDir: 'cv-generator',
   },

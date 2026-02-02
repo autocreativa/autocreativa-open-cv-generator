@@ -19,11 +19,13 @@ const SelectTemplate = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const sampleFromQuery = searchParams.get('sample') === '1';
-    const { selectedTemplate, setSelectedTemplate, setCvData } = useCV();
+    const from = searchParams.get('from');
+    const { selectedTemplate, setSelectedTemplate, setCvData, cvData } = useCV();
     const [activeCategory, setActiveCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [hoveredTemplate, setHoveredTemplate] = useState(null);
-    const [useSampleData, setUseSampleData] = useState(sampleFromQuery);
+    const canUseSample = from !== 'import' && from !== 'assistant' && cvData?.onboardingSource !== 'assistant';
+    const [useSampleData, setUseSampleData] = useState(canUseSample && sampleFromQuery);
 
     // Filter templates
     const filteredTemplates = useMemo(() => {
@@ -43,20 +45,14 @@ const SelectTemplate = () => {
 
     const handleSelectTemplate = (template) => {
         setSelectedTemplate(template.id);
-    };
-
-    const handleContinue = () => {
-        if (selectedTemplate) {
-            if (useSampleData) {
-                const sample = getSampleCVData();
-                setCvData((prev) => ({
-                    ...prev,
-                    ...sample,
-                    selectedTemplate,
-                }));
-            }
-            navigate('/editor');
-        }
+        setCvData((prev) => {
+            const base = useSampleData ? { ...prev, ...getSampleCVData() } : prev;
+            return {
+                ...base,
+                selectedTemplate: template.id,
+            };
+        });
+        navigate('/editor');
     };
 
     const toggleSample = () => {
@@ -113,14 +109,16 @@ const SelectTemplate = () => {
                         />
                     </div>
 
-                    <button
-                        type="button"
-                        className={`sample-toggle ${useSampleData ? 'active' : ''}`}
-                        onClick={toggleSample}
-                    >
-                        <span className="sample-toggle-title">Rellenar con datos de ejemplo</span>
-                        <span className="sample-toggle-subtitle">Ideal para empezar desde cero y luego editar</span>
-                    </button>
+                    {canUseSample && (
+                        <button
+                            type="button"
+                            className={`sample-toggle ${useSampleData ? 'active' : ''}`}
+                            onClick={toggleSample}
+                        >
+                            <span className="sample-toggle-title">Rellenar con datos de ejemplo</span>
+                            <span className="sample-toggle-subtitle">Ideal para empezar desde cero y luego editar</span>
+                        </button>
+                    )}
                 </div>
 
                 {/* Templates Grid */}
@@ -200,9 +198,6 @@ const SelectTemplate = () => {
                             <Check size={16} className="check-icon" />
                             <span>Plantilla seleccionada: <strong>{templates.find(t => t.id === selectedTemplate)?.name}</strong></span>
                         </div>
-                        <Button size="lg" onClick={handleContinue}>
-                            Continuar al Editor
-                        </Button>
                     </div>
                 )}
             </div>

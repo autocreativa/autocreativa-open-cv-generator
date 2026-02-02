@@ -157,6 +157,44 @@ const cvReducer = (state, action) => {
 
 // Provider
 export const CVProvider = ({ children }) => {
+    const sanitizeCvData = useCallback((data) => {
+        const next = data && typeof data === 'object' ? { ...data } : { ...INITIAL_CV_DATA };
+
+        const contactInfo = next.contactInfo && typeof next.contactInfo === 'object' ? next.contactInfo : {};
+        next.contactInfo = { ...INITIAL_CV_DATA.contactInfo, ...contactInfo };
+
+        if (next.professionalSummary && typeof next.professionalSummary === 'object') {
+            next.professionalSummary = String(next.professionalSummary?.summary || '');
+        } else {
+            next.professionalSummary = String(next.professionalSummary || '');
+        }
+
+        const ensureArray = (value) => (Array.isArray(value) ? value : (value ? [value] : []));
+
+        next.workExperience = ensureArray(next.workExperience).filter(Boolean);
+        next.education = ensureArray(next.education).filter(Boolean);
+
+        next.technicalSkills = Array.isArray(next.technicalSkills) ? next.technicalSkills : [];
+        next.softSkills = Array.isArray(next.softSkills) ? next.softSkills : [];
+        next.languages = Array.isArray(next.languages) ? next.languages : [];
+        next.certifications = Array.isArray(next.certifications) ? next.certifications : [];
+        next.projects = Array.isArray(next.projects) ? next.projects : [];
+        next.awards = Array.isArray(next.awards) ? next.awards : [];
+        next.publications = Array.isArray(next.publications) ? next.publications : [];
+        next.volunteering = Array.isArray(next.volunteering) ? next.volunteering : [];
+        next.affiliations = Array.isArray(next.affiliations) ? next.affiliations : [];
+        next.courses = Array.isArray(next.courses) ? next.courses : [];
+        next.references = Array.isArray(next.references) ? next.references : [];
+        next.hobbies = Array.isArray(next.hobbies) ? next.hobbies : [];
+        next.socialLinks = Array.isArray(next.socialLinks) ? next.socialLinks : [];
+        next.conferences = Array.isArray(next.conferences) ? next.conferences : [];
+
+        next.selectedSections = Array.isArray(next.selectedSections)
+            ? next.selectedSections
+            : INITIAL_CV_DATA.selectedSections;
+
+        return next;
+    }, []);
     // Cargar datos de localStorage al iniciar
     const getInitialState = () => {
         try {
@@ -190,8 +228,8 @@ export const CVProvider = ({ children }) => {
     // Acciones
     const setCVData = useCallback((data) => {
         const nextData = typeof data === 'function' ? data(state) : data;
-        dispatch({ type: ACTIONS.SET_CV_DATA, payload: nextData });
-    }, [state]);
+        dispatch({ type: ACTIONS.SET_CV_DATA, payload: sanitizeCvData(nextData) });
+    }, [state, sanitizeCvData]);
 
     const saveCVData = useCallback(() => {
         try {

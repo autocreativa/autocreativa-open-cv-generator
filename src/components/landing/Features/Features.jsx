@@ -1,5 +1,6 @@
 import {
     FileUp,
+    Camera,
     LayoutTemplate,
     Wand2,
     Mic,
@@ -12,9 +13,9 @@ import './Features.css';
 const Features = () => {
     const features = [
         {
-            icon: FileUp,
-            title: 'Importa tu PDF',
-            description: 'Sube tu CV actual y nuestra IA extraerá automáticamente toda tu información profesional.',
+            icon: Camera,
+            title: 'Importa PDF o Foto (OCR)',
+            description: 'Sube tu CV en PDF o una foto/imagen y nuestra IA extraerá automáticamente tu información profesional.',
             color: 'blue',
         },
         {

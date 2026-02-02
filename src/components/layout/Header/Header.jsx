@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, FileText } from 'lucide-react';
+import { Menu, X, FileText, Bug } from 'lucide-react';
 import { useState } from 'react';
 import Button from '../../common/Button';
 import './Header.css';
@@ -44,6 +44,10 @@ const Header = () => {
 
                 {/* CTA Buttons */}
                 <div className="header-actions desktop-nav">
+                    <Link to="/soporte" className="header-icon-link" aria-label="Soporte y sugerencias" title="Soporte y sugerencias">
+                        <Bug size={18} />
+                        <span className="header-icon-text">Enviar comentarios</span>
+                    </Link>
                     <Link to="/importar">
                         <Button variant="outline" size="sm">
                             Importar PDF
@@ -78,6 +82,13 @@ const Header = () => {
                                 {link.label}
                             </Link>
                         ))}
+                        <Link
+                            to="/soporte"
+                            className={`mobile-nav-link ${isActive('/soporte') ? 'active' : ''}`}
+                            onClick={() => setIsMenuOpen(false)}
+                        >
+                            Soporte / Sugerencias
+                        </Link>
                     </nav>
                     <div className="mobile-nav-actions">
                         <Link to="/importar" onClick={() => setIsMenuOpen(false)}>

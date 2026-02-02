@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Mic, MicOff, Loader2, Bot, User, LayoutTemplate } from 'lucide-react';
+import { Send, Mic, Square, Loader2, Bot, User, LayoutTemplate } from 'lucide-react';
 import { useSpeechRecognition } from '../../../hooks/useSpeechRecognition';
 import './ChatInterface.css';
 
@@ -17,6 +17,7 @@ const ChatInterface = ({ sections, onComplete, initialData = {}, onStartWithSamp
     const [currentFieldIndex, setCurrentFieldIndex] = useState(0);
     const [cvData, setCvData] = useState(initialData);
     const [isLoading, setIsLoading] = useState(false);
+    const [isVoiceTooltipOpen, setIsVoiceTooltipOpen] = useState(false);
 
     const messagesEndRef = useRef(null);
     const messagesContainerRef = useRef(null);
@@ -34,6 +35,7 @@ const ChatInterface = ({ sections, onComplete, initialData = {}, onStartWithSamp
     const cvDataRef = useRef(cvData);
 
     const hasStartedRef = useRef(false);
+    const hasCompletedRef = useRef(false);
     const startConversationTimeoutRef = useRef(null);
     const askQuestionTimeoutRef = useRef(null);
     const nextQuestionTimeoutRef = useRef(null);
@@ -41,11 +43,80 @@ const ChatInterface = ({ sections, onComplete, initialData = {}, onStartWithSamp
     const {
         isListening,
         transcript,
+        interimTranscript,
         startListening,
         stopListening,
         isSupported,
         error: speechError
     } = useSpeechRecognition();
+
+    const normalizeEmail = useCallback((value) => {
+        return String(value || '')
+            .trim()
+            .replace(/\s+/g, '')
+            .toLowerCase();
+    }, []);
+
+    const parseMonthYearToISO = useCallback((value) => {
+        const raw = String(value || '').trim();
+        if (!raw) return '';
+
+        // If already in YYYY-MM
+        if (/^\d{4}-\d{2}$/.test(raw)) return raw;
+
+        // If only year, return December of that year
+        const yearOnly = raw.match(/^(\d{4})$/);
+        if (yearOnly) return `${yearOnly[1]}-12`;
+
+        const months = {
+            enero: '01',
+            feb: '02',
+            febrero: '02',
+            mar: '03',
+            marzo: '03',
+            abr: '04',
+            abril: '04',
+            may: '05',
+            mayo: '05',
+            jun: '06',
+            junio: '06',
+            jul: '07',
+            julio: '07',
+            ago: '08',
+            agosto: '08',
+            sep: '09',
+            sept: '09',
+            septiembre: '09',
+            oct: '10',
+            octubre: '10',
+            nov: '11',
+            noviembre: '11',
+            dic: '12',
+            diciembre: '12',
+        };
+
+        const normalized = raw
+            .toLowerCase()
+            .replace(/\./g, '')
+            .replace(/\s+/g, ' ');
+
+        const match = normalized.match(/([a-záéíóúñ]+)\s+(\d{4})/i);
+        if (match) {
+            const monthKey = match[1].normalize('NFD').replace(/\p{Diacritic}/gu, '');
+            const year = match[2];
+            const month = months[monthKey];
+            if (month) return `${year}-${month}`;
+        }
+
+        return '';
+    }, []);
+
+    const splitCommaList = useCallback((value) => {
+        return String(value || '')
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
+    }, []);
 
     // Scroll al último mensaje
     useEffect(() => {
@@ -65,9 +136,26 @@ const ChatInterface = ({ sections, onComplete, initialData = {}, onStartWithSamp
     // Procesar transcript del reconocimiento de voz
     useEffect(() => {
         if (transcript && !isListening) {
-            setInputValue(transcript);
+            const field = getCurrentField();
+            if (field?.key === 'email') {
+                setInputValue(normalizeEmail(transcript));
+            } else {
+                setInputValue(transcript);
+            }
         }
-    }, [transcript, isListening]);
+    }, [transcript, isListening, normalizeEmail]);
+
+    // Mostrar dictado parcial en el input mientras escucha
+    useEffect(() => {
+        if (!isListening) return;
+        if (!interimTranscript) return;
+        const field = getCurrentField();
+        if (field?.key === 'email') {
+            setInputValue(normalizeEmail(interimTranscript));
+        } else {
+            setInputValue(interimTranscript);
+        }
+    }, [interimTranscript, isListening]);
 
     const getSectionFields = useCallback((sectionId) => {
         const fieldsBySection = {
@@ -75,7 +163,9 @@ const ChatInterface = ({ sections, onComplete, initialData = {}, onStartWithSamp
                 { key: 'fullName', question: '¿Cuál es tu nombre completo?', placeholder: 'Ej: Juan Pérez García' },
                 { key: 'email', question: '¿Cuál es tu correo electrónico?', placeholder: 'Ej: juan@email.com' },
                 { key: 'phone', question: '¿Cuál es tu número de teléfono?', placeholder: 'Ej: +56 9 1234 5678' },
+                { key: 'address', question: '¿Cuál es tu dirección o ubicación? (opcional)', placeholder: 'Ej: Chile, Región del Maule, Talca' },
                 { key: 'city', question: '¿En qué ciudad resides?', placeholder: 'Ej: Santiago' },
+                { key: 'country', question: '¿En qué país resides?', placeholder: 'Ej: Chile' },
             ],
             professionalSummary: [
                 { key: 'summary', question: 'Cuéntame brevemente sobre ti y tu perfil profesional.', placeholder: 'Describe tu experiencia y objetivos...' },
@@ -111,7 +201,7 @@ const ChatInterface = ({ sections, onComplete, initialData = {}, onStartWithSamp
             const welcomeMessage = {
                 id: nextMessageId(),
                 type: 'bot',
-                content: '¡Hola! 👋 Soy tu asistente para crear tu CV. Te haré algunas preguntas para completar cada sección. ¡Empecemos!',
+                content: '¡Hola! Soy tu asistente para crear tu CV. 👋 Estos son los primeros pasos para ingresar tus datos y poder comenzar. Luego podrás complementar y mejorar tu currículum con más información, siempre asistido por nuestro asistente de IA. ¡Empecemos!',
             };
 
             setMessages([welcomeMessage]);
@@ -185,7 +275,12 @@ const ChatInterface = ({ sections, onComplete, initialData = {}, onStartWithSamp
             };
             setMessages((prev) => [...prev, finalMessage]);
 
-            // No llamar a onComplete automáticamente; esperar a que el usuario haga clic en el botón
+            if (onComplete && !hasCompletedRef.current) {
+                hasCompletedRef.current = true;
+                setTimeout(() => {
+                    onComplete(cvDataRef.current);
+                }, 300);
+            }
             return;
         }
 
@@ -241,27 +336,100 @@ const ChatInterface = ({ sections, onComplete, initialData = {}, onStartWithSamp
     const handleSend = () => {
         if (!inputValue.trim() || isLoading) return;
 
+        const field = getCurrentField();
+        const valueToSend = field?.key === 'email' ? normalizeEmail(inputValue) : inputValue;
+
         // Agregar mensaje del usuario
         const userMessage = {
             id: nextMessageId(),
             type: 'user',
-            content: inputValue,
+            content: valueToSend,
         };
         setMessages((prev) => [...prev, userMessage]);
 
         // Guardar respuesta
         const section = sections[currentSection];
         const fields = getSectionFields(section);
-        const field = fields[currentFieldIndex];
+        const fieldFromIndex = fields[currentFieldIndex];
 
-        if (field) {
-            setCvData((prev) => ({
-                ...prev,
-                [section]: {
-                    ...(prev[section] || {}),
-                    [field.key]: inputValue,
-                },
-            }));
+        if (fieldFromIndex) {
+            const prevData = cvDataRef.current || {};
+            let updatedCvData = { ...prevData };
+
+            if (section === 'contactInfo') {
+                updatedCvData = {
+                    ...prevData,
+                    contactInfo: {
+                        ...(prevData.contactInfo || {}),
+                        [fieldFromIndex.key]: valueToSend,
+                    },
+                };
+            } else if (section === 'professionalSummary') {
+                updatedCvData = {
+                    ...prevData,
+                    professionalSummary: valueToSend,
+                };
+            } else if (section === 'workExperience') {
+                const prevArr = Array.isArray(prevData.workExperience) ? [...prevData.workExperience] : [];
+                const current = prevArr[0] || {
+                    company: '',
+                    position: '',
+                    startDate: '',
+                    endDate: '',
+                    isCurrent: false,
+                    description: '',
+                    location: '',
+                };
+
+                const nextValue = fieldFromIndex.key === 'startDate'
+                    ? (parseMonthYearToISO(valueToSend) || valueToSend)
+                    : valueToSend;
+
+                prevArr[0] = { ...current, [fieldFromIndex.key]: nextValue };
+                updatedCvData = { ...prevData, workExperience: prevArr };
+            } else if (section === 'education') {
+                const prevArr = Array.isArray(prevData.education) ? [...prevData.education] : [];
+                const current = prevArr[0] || {
+                    institution: '',
+                    degree: '',
+                    field: '',
+                    startDate: '',
+                    endDate: '',
+                    description: '',
+                };
+
+                const nextValue = (fieldFromIndex.key === 'startDate' || fieldFromIndex.key === 'endDate')
+                    ? (parseMonthYearToISO(valueToSend) || valueToSend)
+                    : valueToSend;
+
+                prevArr[0] = { ...current, [fieldFromIndex.key]: nextValue };
+                updatedCvData = { ...prevData, education: prevArr };
+            } else if (section === 'technicalSkills') {
+                updatedCvData = {
+                    ...prevData,
+                    technicalSkills: splitCommaList(valueToSend).map((name) => ({ name, level: 3 })),
+                };
+            } else if (section === 'languages') {
+                updatedCvData = {
+                    ...prevData,
+                    languages: splitCommaList(valueToSend).map((raw) => {
+                        const m = raw.match(/^(.+?)\s*\((.+)\)$/);
+                        if (m) return { language: m[1].trim(), level: m[2].trim() };
+                        return { language: raw, level: '' };
+                    }),
+                };
+            } else {
+                updatedCvData = {
+                    ...prevData,
+                    [section]: {
+                        ...(prevData[section] || {}),
+                        [fieldFromIndex.key]: valueToSend,
+                    },
+                };
+            }
+
+            cvDataRef.current = updatedCvData;
+            setCvData(updatedCvData);
         }
 
         setInputValue('');
@@ -308,9 +476,14 @@ const ChatInterface = ({ sections, onComplete, initialData = {}, onStartWithSamp
         if (isListening) {
             stopListening();
         } else {
+            setInputValue('');
             startListening();
         }
     };
+
+    const voiceTooltipText = isListening
+        ? 'Escuchando… Parar y revisar información'
+        : 'Dictar con micrófono';
 
     return (
         <>
@@ -363,6 +536,11 @@ const ChatInterface = ({ sections, onComplete, initialData = {}, onStartWithSamp
 
             {/* Input */}
             <div className="chat-input-wrapper">
+                {(isListening || isVoiceTooltipOpen) && (
+                    <div className="chat-input-tooltip" role="status">
+                        {voiceTooltipText}
+                    </div>
+                )}
                 <div className="chat-input-container">
                     <input
                         ref={inputRef}
@@ -379,24 +557,28 @@ const ChatInterface = ({ sections, onComplete, initialData = {}, onStartWithSamp
                             className={`voice-btn ${isListening ? 'active' : ''}`}
                             onClick={toggleVoice}
                             disabled={isLoading}
+                            aria-label={isListening ? 'Parar y revisar información' : 'Dictar con micrófono'}
+                            onMouseEnter={() => setIsVoiceTooltipOpen(true)}
+                            onMouseLeave={() => setIsVoiceTooltipOpen(false)}
+                            onFocus={() => setIsVoiceTooltipOpen(true)}
+                            onBlur={() => setIsVoiceTooltipOpen(false)}
                         >
-                            {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+                            {isListening ? <Square size={20} /> : <Mic size={20} />}
                         </button>
                     )}
 
                     <button
                         className="send-btn"
                         onClick={handleSend}
-                        disabled={!inputValue.trim() || isLoading}
+                        disabled={!inputValue.trim() || isLoading || isListening}
                     >
                         <Send size={20} />
                     </button>
                 </div>
 
-                {isListening && (
+                {speechError && !isListening && (
                     <div className="listening-indicator">
-                        <span className="pulse" />
-                        Escuchando...
+                        {speechError}
                     </div>
                 )}
             </div>

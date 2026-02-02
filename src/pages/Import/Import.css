@@ -38,6 +38,38 @@
     gap: var(--space-8);
 }
 
+.import-mode-tabs {
+    display: inline-flex;
+    align-self: center;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-full);
+    padding: 4px;
+    gap: 4px;
+}
+
+.import-mode-tab {
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.import-mode-tab:hover {
+    color: var(--text-primary);
+    background: var(--secondary-100);
+}
+
+.import-mode-tab.active {
+    background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+    color: white;
+}
+
 /* Title Section */
 .import-title-section {
     text-align: center;

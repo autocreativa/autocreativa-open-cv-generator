@@ -23,6 +23,7 @@ const Landing = () => {
                             <span className="tech-badge">React</span>
                             <span className="tech-badge">OpenRouter AI</span>
                             <span className="tech-badge">PDF.js</span>
+                            <span className="tech-badge">Tesseract OCR</span>
                             <span className="tech-badge">Web Speech API</span>
                         </div>
                     </div>
