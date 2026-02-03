@@ -146,18 +146,26 @@
     left: 0;
     right: 0;
     bottom: 0;
-    /* Fondo sólido para evitar transparencia */
-    background-color: #ffffff;
-    background: var(--bg-primary);
+    /* Altura explícita para garantizar cobertura total */
+    height: calc(100vh - 72px);
+    height: calc(100dvh - 72px);
+    /* Dynamic viewport height para móviles */
+    /* Fondo sólido garantizado - no transparencia */
+    background: #ffffff !important;
     padding: var(--space-6);
     flex-direction: column;
     gap: var(--space-6);
     transform: translateX(100%);
     transition: transform var(--transition-base);
     z-index: var(--z-modal, 1000);
-    /* Asegura que no haya transparencia */
-    opacity: 1;
-    backdrop-filter: none;
+    overflow-y: auto;
+    /* Asegurar que esté por encima de todo */
+    isolation: isolate;
+}
+
+/* Soporte para dark mode en menú móvil */
+[data-theme="dark"] .mobile-nav {
+    background: #0f172a !important;
 }
 
 .mobile-nav.open {
