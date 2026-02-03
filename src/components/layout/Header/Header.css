@@ -146,12 +146,18 @@
     left: 0;
     right: 0;
     bottom: 0;
+    /* Fondo sólido para evitar transparencia */
+    background-color: #ffffff;
     background: var(--bg-primary);
     padding: var(--space-6);
     flex-direction: column;
     gap: var(--space-6);
     transform: translateX(100%);
     transition: transform var(--transition-base);
+    z-index: var(--z-modal, 1000);
+    /* Asegura que no haya transparencia */
+    opacity: 1;
+    backdrop-filter: none;
 }
 
 .mobile-nav.open {
