@@ -7,12 +7,17 @@ import slowDown from 'express-slow-down';
 import { RecaptchaEnterpriseServiceClient } from '@google-cloud/recaptcha-enterprise';
 
 dotenv.config({ path: process.env.DOTENV_CONFIG_PATH || undefined });
-
 const app = express();
 
 if (process.env.TRUST_PROXY) {
     app.set('trust proxy', process.env.TRUST_PROXY);
 }
+
+app.get('/', (_req, res) => {
+    res.status(200);
+    res.setHeader('Content-Type', 'text/html');
+    res.end('OK');
+});
 
 app.use(express.json({ limit: '25mb' }));
 
@@ -362,11 +367,21 @@ const mailFrom = process.env.MAIL_FROM || process.env.SMTP_USER;
 const supportInbox = process.env.SUPPORT_INBOX || mailFrom;
 const downloadAlertRecipients = parseRecipients(process.env.DOWNLOAD_ALERT_RECIPIENTS);
 
-app.get('/api/health', (_req, res) => {
+const normalizeBasePath = (value) => {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    const withLeadingSlash = raw.startsWith('/') ? raw : `/${raw}`;
+    return withLeadingSlash.replace(/\/+$/, '');
+};
+
+const apiBasePath = normalizeBasePath(process.env.API_BASE_PATH);
+const apiRouter = express.Router();
+
+apiRouter.get('/health', (_req, res) => {
     res.json({ ok: true });
 });
 
-app.post('/api/support', supportLimiter, supportSlowDown, async (req, res) => {
+apiRouter.post('/support', supportLimiter, supportSlowDown, async (req, res) => {
     const {
         name,
         email,
@@ -548,7 +563,7 @@ app.post('/api/support', supportLimiter, supportSlowDown, async (req, res) => {
     }
 });
 
-app.post('/api/track-download', downloadLimiter, downloadSlowDown, async (req, res) => {
+apiRouter.post('/track-download', downloadLimiter, downloadSlowDown, async (req, res) => {
     const { eventType, fileName, fileBase64, user } = req.body || {};
 
     if (!eventType || !fileName || !fileBase64) {
@@ -646,6 +661,11 @@ app.post('/api/track-download', downloadLimiter, downloadSlowDown, async (req, r
         return res.status(500).json({ ok: false, error: 'No se pudo enviar el correo' });
     }
 });
+
+app.use('/api', apiRouter);
+if (apiBasePath) {
+    app.use(`${apiBasePath}/api`, apiRouter);
+}
 
 const port = Number(process.env.PORT || 5174);
 app.listen(port, () => {

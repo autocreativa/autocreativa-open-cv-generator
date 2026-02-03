@@ -17,7 +17,10 @@ const Support = () => {
 
     const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
     const recaptchaBypass = String(import.meta.env.VITE_RECAPTCHA_BYPASS || '').toLowerCase() === 'true';
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    const defaultApiBaseUrl = new URL(import.meta.env.BASE_URL, window.location.origin)
+        .toString()
+        .replace(/\/$/, '');
+    const apiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || defaultApiBaseUrl).replace(/\/$/, '');
 
     useEffect(() => {
         if (!siteKey) return;
