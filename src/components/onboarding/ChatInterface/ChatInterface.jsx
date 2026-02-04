@@ -486,28 +486,9 @@ const ChatInterface = ({ sections, onComplete, initialData = {}, onStartWithSamp
         : 'Dictar con micrófono';
 
     return (
-        <>
-            {onStartWithSampleTemplate && (
-                <div className="chat-sample-toggle">
-                    <button
-                        className="chat-sample-toggle-btn"
-                        onClick={() => {
-                            if (onStartWithSampleTemplate) {
-                                onStartWithSampleTemplate();
-                            }
-                        }}
-                    >
-                        <LayoutTemplate size={18} />
-                        <div className="chat-sample-toggle-text">
-                            <span className="chat-sample-toggle-title">Rellenar con datos de ejemplo</span>
-                            <span className="chat-sample-toggle-subtitle">Ver plantillas y editarlas</span>
-                        </div>
-                    </button>
-                </div>
-            )}
-            <div className="chat-interface">
-                {/* Messages */}
-                <div className="chat-messages" ref={messagesContainerRef}>
+        <div className="chat-interface">
+            {/* Messages */}
+            <div className="chat-messages" ref={messagesContainerRef}>
                 {messages.map((message) => (
                     <div
                         key={message.id}
@@ -582,8 +563,7 @@ const ChatInterface = ({ sections, onComplete, initialData = {}, onStartWithSamp
                     </div>
                 )}
             </div>
-            </div>
-        </>
+        </div>
     );
 };
 

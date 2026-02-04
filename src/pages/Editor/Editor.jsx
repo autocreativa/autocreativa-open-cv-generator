@@ -11,7 +11,8 @@ import {
     Loader2,
     FileSignature,
     X,
-    Check
+    Check,
+    Plus
 } from 'lucide-react';
 import Button from '../../components/common/Button';
 import CoverLetterModal from '../../components/editor/CoverLetterModal';
@@ -28,9 +29,9 @@ GlobalWorkerOptions.workerSrc = pdfWorker;
 
 const Editor = () => {
     const navigate = useNavigate();
-    const { cvData, setCvData, selectedTemplate, selectedSections, saveCVData } = useCV();
+    const { cvData, setCvData, selectedTemplate, selectedSections, setSelectedSections, saveCVData } = useCV();
 
-    const [activeTab, setActiveTab] = useState('preview'); // 'preview' | 'edit'
+    // activeTab removed for unified view
     const [editingSection, setEditingSection] = useState(null);
     const [isImproving, setIsImproving] = useState(null);
     const [showTemplateDropdown, setShowTemplateDropdown] = useState(false);
@@ -50,7 +51,7 @@ const Editor = () => {
 
     const prevTemplateRef = useRef(currentTemplate);
     const prevPageSizeRef = useRef(pageSize);
-    const prevActiveTabRef = useRef(activeTab);
+    // prevActiveTabRef removed
 
     const applySuggestionRef = useRef(null);
     const [aiModalOpen, setAiModalOpen] = useState(false);
@@ -146,8 +147,7 @@ const Editor = () => {
         if (isExporting) return;
         setIsExporting(true);
 
-        // Switch to preview mode ensures PDF is generated from the preview
-        setActiveTab('preview');
+        // Real-time preview is now always active
 
         // Wait for render
         setTimeout(async () => {
@@ -256,24 +256,17 @@ const Editor = () => {
     };
 
     useEffect(() => {
-        const enteredPreview = prevActiveTabRef.current !== 'preview' && activeTab === 'preview';
         const templateChanged = prevTemplateRef.current !== currentTemplate;
         const pageSizeChanged = prevPageSizeRef.current !== pageSize;
 
-        if (enteredPreview || templateChanged || pageSizeChanged) {
+        if (templateChanged || pageSizeChanged) {
             setPreviewPages([]);
         }
 
-        prevActiveTabRef.current = activeTab;
         prevTemplateRef.current = currentTemplate;
         prevPageSizeRef.current = pageSize;
 
-        if (activeTab !== 'preview') {
-            setIsRenderingPreview(false);
-            return;
-        }
-
-        if (enteredPreview || templateChanged || pageSizeChanged) {
+        if (templateChanged || pageSizeChanged) {
             setIsRenderingPreview(true);
         }
 
@@ -290,7 +283,7 @@ const Editor = () => {
                 clearTimeout(previewDebounceRef.current);
             }
         };
-    }, [activeTab, currentTemplate, pageSize, cvData, selectedSections]);
+    }, [currentTemplate, pageSize, cvData, selectedSections]);
 
     const sectionLabels = {
         contactInfo: 'Datos de Contacto',
@@ -427,33 +420,9 @@ const Editor = () => {
                         Generar carta de presentación
                     </Button>
 
-                    <div className="page-size-selector">
-                        <select
-                            value={pageSize}
-                            onChange={(e) => setPageSize(e.target.value)}
-                            aria-label="Tamaño de página"
-                        >
-                            <option value="a4">A4</option>
-                            <option value="letter">Carta</option>
-                        </select>
-                    </div>
 
-                    <div className="view-toggle">
-                        <button
-                            className={`toggle-btn ${activeTab === 'edit' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('edit')}
-                        >
-                            <Edit3 size={16} />
-                            <span>Editar</span>
-                        </button>
-                        <button
-                            className={`toggle-btn ${activeTab === 'preview' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('preview')}
-                        >
-                            <Eye size={16} />
-                            <span>Vista previa</span>
-                        </button>
-                    </div>
+
+                    {/* View toggle removed */}
 
                     <Button
                         variant="primary"
@@ -468,690 +437,716 @@ const Editor = () => {
             </div>
 
             {/* Main Content */}
-            <div className={`editor-content mode-${activeTab}`}>
+            <div className="editor-content">
                 {/* Left Panel - Edit */}
-                <aside className={`edit-panel ${activeTab === 'edit' ? 'active' : ''}`}>
+                <aside className="edit-panel">
                     <div className="panel-header">
                         <h2>Editar CV</h2>
                         <p>Haz clic en una sección para editarla</p>
                     </div>
 
                     <div className="sections-list">
-                        {selectedSections.map((sectionId) => (
-                            <div key={sectionId} className="edit-section">
-                                <div
-                                    className="section-header"
-                                    onClick={() => setEditingSection(editingSection === sectionId ? null : sectionId)}
-                                >
-                                    <h3>{sectionLabels[sectionId] || sectionId}</h3>
-                                    <ChevronDown
-                                        size={18}
-                                        className={`chevron ${editingSection === sectionId ? 'open' : ''}`}
-                                    />
-                                </div>
 
-                                {editingSection === sectionId && (
-                                    <div className="section-content">
-                                        {sectionId === 'professionalSummary' && (
-                                            <div className="field-group">
-                                                <div className="field-header">
-                                                    <label>Resumen profesional</label>
-                                                    <button
-                                                        className="improve-btn"
+                        {Object.keys(sectionLabels).map((sectionId) => {
+                            const isActive = selectedSections.includes(sectionId);
+                            return (
+                                <div key={sectionId} className={`edit-section ${!isActive ? 'inactive' : ''}`}>
+                                    <div
+                                        className="section-header"
+                                        onClick={() => {
+                                            if (!isActive) {
+                                                setSelectedSections([...selectedSections, sectionId]);
+                                                setEditingSection(sectionId);
+                                            } else {
+                                                setEditingSection(editingSection === sectionId ? null : sectionId);
+                                            }
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <h3>{sectionLabels[sectionId] || sectionId}</h3>
+                                            {!isActive && (
+                                                <span style={{ fontSize: '10px', backgroundColor: '#e2e8f0', color: '#64748b', padding: '2px 6px', borderRadius: '4px' }}>
+                                                    Agregar
+                                                </span>
+                                            )}
+                                        </div>
+                                        {isActive ? (
+                                            <ChevronDown
+                                                size={18}
+                                                className={`chevron ${editingSection === sectionId ? 'open' : ''}`}
+                                            />
+                                        ) : (
+                                            <Plus size={18} className="text-muted" />
+                                        )}
+                                    </div>
+
+                                    {isActive && editingSection === sectionId && (
+                                        <div className="section-content">
+                                            {/* Content rendering logic remains same, but we need to ensure we don't break the loop nesting */}
+                                            {/* Since we are inside the map, we need to handle specific sections again or ensure the existing conditionals work */}
+
+                                            {sectionId === 'professionalSummary' && (
+                                                <div className="field-group">
+                                                    <div className="field-header">
+                                                        <label>Resumen profesional</label>
+                                                        <button
+                                                            className="improve-btn"
+                                                            onClick={() =>
+                                                                openImproveModal({
+                                                                    title: 'Resumen profesional',
+                                                                    sectionType: 'professionalSummary',
+                                                                    text: cvData?.professionalSummary,
+                                                                    applySuggestion: (s) => handleFieldChange('professionalSummary', null, s),
+                                                                })
+                                                            }
+                                                            disabled={isImproving}
+                                                        >
+                                                            {isImproving === 'professionalSummary' ? (
+                                                                <Loader2 size={14} className="animate-spin" />
+                                                            ) : (
+                                                                <>
+                                                                    <Wand2 size={14} />
+                                                                    <span>Mejorar con IA</span>
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                    <textarea
+                                                        value={cvData?.professionalSummary || ''}
+                                                        onChange={(e) => handleFieldChange(sectionId, null, e.target.value)}
+                                                        placeholder="Describe tu perfil profesional..."
+                                                        rows={4}
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {sectionId === 'contactInfo' && (
+                                                <>
+                                                    <div className="field-group">
+                                                        <label>Nombre completo</label>
+                                                        <input
+                                                            type="text"
+                                                            value={cvData?.contactInfo?.fullName || ''}
+                                                            onChange={(e) => handleFieldChange('contactInfo', 'fullName', e.target.value)}
+                                                            placeholder="Tu nombre"
+                                                        />
+                                                    </div>
+                                                    <div className="field-group">
+                                                        <label>Título (Opcional)</label>
+                                                        <input
+                                                            type="text"
+                                                            value={cvData?.contactInfo?.title || ''}
+                                                            onChange={(e) => handleFieldChange('contactInfo', 'title', e.target.value)}
+                                                            placeholder="Ej: Desarrollador Frontend"
+                                                        />
+                                                    </div>
+                                                    <div className="field-group">
+                                                        <label>Email</label>
+                                                        <input
+                                                            type="email"
+                                                            value={cvData?.contactInfo?.email || ''}
+                                                            onChange={(e) => handleFieldChange('contactInfo', 'email', e.target.value)}
+                                                            placeholder="tu@email.com"
+                                                        />
+                                                    </div>
+                                                    <div className="field-group">
+                                                        <label>Teléfono</label>
+                                                        <input
+                                                            type="tel"
+                                                            value={cvData?.contactInfo?.phone || ''}
+                                                            onChange={(e) => handleFieldChange('contactInfo', 'phone', e.target.value)}
+                                                            placeholder="+56 9 1234 5678"
+                                                        />
+                                                    </div>
+                                                    <div className="field-group">
+                                                        <label>Dirección</label>
+                                                        <input
+                                                            type="text"
+                                                            value={cvData?.contactInfo?.address || ''}
+                                                            onChange={(e) => handleFieldChange('contactInfo', 'address', e.target.value)}
+                                                            placeholder="Calle 123"
+                                                        />
+                                                    </div>
+                                                    <div className="field-group">
+                                                        <label>Ciudad</label>
+                                                        <input
+                                                            type="text"
+                                                            value={cvData?.contactInfo?.city || ''}
+                                                            onChange={(e) => handleFieldChange('contactInfo', 'city', e.target.value)}
+                                                            placeholder="Santiago"
+                                                        />
+                                                    </div>
+                                                    <div className="field-group">
+                                                        <label>País</label>
+                                                        <input
+                                                            type="text"
+                                                            value={cvData?.contactInfo?.country || ''}
+                                                            onChange={(e) => handleFieldChange('contactInfo', 'country', e.target.value)}
+                                                            placeholder="Chile"
+                                                        />
+                                                    </div>
+                                                </>
+                                            )}
+
+                                            {sectionId === 'workExperience' && (
+                                                <>
+                                                    {(cvData?.workExperience || []).map((exp, idx) => (
+                                                        <div key={idx} className="array-item">
+                                                            <div className="array-item-header">
+                                                                <strong>Experiencia {idx + 1}</strong>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => removeArrayItem('workExperience', idx)}
+                                                                >
+                                                                    Eliminar
+                                                                </Button>
+                                                            </div>
+
+                                                            <div className="field-group">
+                                                                <label>Cargo</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={exp.position || ''}
+                                                                    onChange={(e) => updateArrayField('workExperience', idx, 'position', e.target.value)}
+                                                                />
+                                                            </div>
+
+                                                            <div className="field-group">
+                                                                <label>Empresa</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={exp.company || ''}
+                                                                    onChange={(e) => updateArrayField('workExperience', idx, 'company', e.target.value)}
+                                                                />
+                                                            </div>
+
+                                                            <div className="field-group">
+                                                                <label>Ubicación (Opcional)</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={exp.location || ''}
+                                                                    onChange={(e) => updateArrayField('workExperience', idx, 'location', e.target.value)}
+                                                                />
+                                                            </div>
+
+                                                            <div className="two-col">
+                                                                <div className="field-group">
+                                                                    <label>Inicio</label>
+                                                                    <input
+                                                                        type="month"
+                                                                        value={exp.startDate || ''}
+                                                                        onChange={(e) => updateArrayField('workExperience', idx, 'startDate', e.target.value)}
+                                                                    />
+                                                                </div>
+                                                                <div className="field-group">
+                                                                    <label>Fin</label>
+                                                                    <input
+                                                                        type="month"
+                                                                        value={exp.endDate || ''}
+                                                                        onChange={(e) => updateArrayField('workExperience', idx, 'endDate', e.target.value)}
+                                                                        disabled={!!exp.isCurrent}
+                                                                    />
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="field-group checkbox-row">
+                                                                <label>
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={!!exp.isCurrent}
+                                                                        onChange={(e) => updateArrayField('workExperience', idx, 'isCurrent', e.target.checked)}
+                                                                    />
+                                                                    Trabajo actual
+                                                                </label>
+                                                            </div>
+
+                                                            <div className="field-group">
+                                                                <div className="field-header">
+                                                                    <label>Descripción</label>
+                                                                    <button
+                                                                        className="improve-btn"
+                                                                        onClick={() =>
+                                                                            openImproveModal({
+                                                                                title: `Experiencia ${idx + 1} - Descripción`,
+                                                                                sectionType: `workExperience.description`,
+                                                                                text: exp.description,
+                                                                                applySuggestion: (s) => updateArrayField('workExperience', idx, 'description', s),
+                                                                            })
+                                                                        }
+                                                                        disabled={isImproving}
+                                                                    >
+                                                                        {isImproving === 'workExperience.description' ? (
+                                                                            <Loader2 size={14} className="animate-spin" />
+                                                                        ) : (
+                                                                            <>
+                                                                                <Wand2 size={14} />
+                                                                                <span>Mejorar con IA</span>
+                                                                            </>
+                                                                        )}
+                                                                    </button>
+                                                                </div>
+                                                                <textarea
+                                                                    value={exp.description || ''}
+                                                                    onChange={(e) => updateArrayField('workExperience', idx, 'description', e.target.value)}
+                                                                    rows={4}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    ))}
+
+                                                    <Button
+                                                        variant="outline"
                                                         onClick={() =>
-                                                            openImproveModal({
-                                                                title: 'Resumen profesional',
-                                                                sectionType: 'professionalSummary',
-                                                                text: cvData?.professionalSummary,
-                                                                applySuggestion: (s) => handleFieldChange('professionalSummary', null, s),
+                                                            addArrayItem('workExperience', {
+                                                                company: '',
+                                                                position: '',
+                                                                startDate: '',
+                                                                endDate: '',
+                                                                isCurrent: false,
+                                                                description: '',
+                                                                location: '',
                                                             })
                                                         }
-                                                        disabled={isImproving}
                                                     >
-                                                        {isImproving === 'professionalSummary' ? (
-                                                            <Loader2 size={14} className="animate-spin" />
-                                                        ) : (
-                                                            <>
-                                                                <Wand2 size={14} />
-                                                                <span>Mejorar con IA</span>
-                                                            </>
-                                                        )}
-                                                    </button>
-                                                </div>
-                                                <textarea
-                                                    value={cvData?.professionalSummary || ''}
-                                                    onChange={(e) => handleFieldChange(sectionId, null, e.target.value)}
-                                                    placeholder="Describe tu perfil profesional..."
-                                                    rows={4}
-                                                />
-                                            </div>
-                                        )}
+                                                        Agregar experiencia
+                                                    </Button>
+                                                </>
+                                            )}
 
-                                        {sectionId === 'contactInfo' && (
-                                            <>
-                                                <div className="field-group">
-                                                    <label>Nombre completo</label>
-                                                    <input
-                                                        type="text"
-                                                        value={cvData?.contactInfo?.fullName || ''}
-                                                        onChange={(e) => handleFieldChange('contactInfo', 'fullName', e.target.value)}
-                                                        placeholder="Tu nombre"
-                                                    />
-                                                </div>
-                                                <div className="field-group">
-                                                    <label>Título (Opcional)</label>
-                                                    <input
-                                                        type="text"
-                                                        value={cvData?.contactInfo?.title || ''}
-                                                        onChange={(e) => handleFieldChange('contactInfo', 'title', e.target.value)}
-                                                        placeholder="Ej: Desarrollador Frontend"
-                                                    />
-                                                </div>
-                                                <div className="field-group">
-                                                    <label>Email</label>
-                                                    <input
-                                                        type="email"
-                                                        value={cvData?.contactInfo?.email || ''}
-                                                        onChange={(e) => handleFieldChange('contactInfo', 'email', e.target.value)}
-                                                        placeholder="tu@email.com"
-                                                    />
-                                                </div>
-                                                <div className="field-group">
-                                                    <label>Teléfono</label>
-                                                    <input
-                                                        type="tel"
-                                                        value={cvData?.contactInfo?.phone || ''}
-                                                        onChange={(e) => handleFieldChange('contactInfo', 'phone', e.target.value)}
-                                                        placeholder="+56 9 1234 5678"
-                                                    />
-                                                </div>
-                                                <div className="field-group">
-                                                    <label>Dirección</label>
-                                                    <input
-                                                        type="text"
-                                                        value={cvData?.contactInfo?.address || ''}
-                                                        onChange={(e) => handleFieldChange('contactInfo', 'address', e.target.value)}
-                                                        placeholder="Calle 123"
-                                                    />
-                                                </div>
-                                                <div className="field-group">
-                                                    <label>Ciudad</label>
-                                                    <input
-                                                        type="text"
-                                                        value={cvData?.contactInfo?.city || ''}
-                                                        onChange={(e) => handleFieldChange('contactInfo', 'city', e.target.value)}
-                                                        placeholder="Santiago"
-                                                    />
-                                                </div>
-                                                <div className="field-group">
-                                                    <label>País</label>
-                                                    <input
-                                                        type="text"
-                                                        value={cvData?.contactInfo?.country || ''}
-                                                        onChange={(e) => handleFieldChange('contactInfo', 'country', e.target.value)}
-                                                        placeholder="Chile"
-                                                    />
-                                                </div>
-                                            </>
-                                        )}
+                                            {sectionId === 'education' && (
+                                                <>
+                                                    {(cvData?.education || []).map((edu, idx) => (
+                                                        <div key={idx} className="array-item">
+                                                            <div className="array-item-header">
+                                                                <strong>Estudio {idx + 1}</strong>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => removeArrayItem('education', idx)}
+                                                                >
+                                                                    Eliminar
+                                                                </Button>
+                                                            </div>
 
-                                        {sectionId === 'workExperience' && (
-                                            <>
-                                                {(cvData?.workExperience || []).map((exp, idx) => (
-                                                    <div key={idx} className="array-item">
-                                                        <div className="array-item-header">
-                                                            <strong>Experiencia {idx + 1}</strong>
+                                                            <div className="field-group">
+                                                                <label>Institución</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={edu.institution || ''}
+                                                                    onChange={(e) => updateArrayField('education', idx, 'institution', e.target.value)}
+                                                                />
+                                                            </div>
+
+                                                            <div className="field-group">
+                                                                <label>Título</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={edu.degree || ''}
+                                                                    onChange={(e) => updateArrayField('education', idx, 'degree', e.target.value)}
+                                                                />
+                                                            </div>
+
+                                                            <div className="field-group">
+                                                                <label>Área (Opcional)</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={edu.field || ''}
+                                                                    onChange={(e) => updateArrayField('education', idx, 'field', e.target.value)}
+                                                                />
+                                                            </div>
+
+                                                            <div className="two-col">
+                                                                <div className="field-group">
+                                                                    <label>Inicio</label>
+                                                                    <input
+                                                                        type="month"
+                                                                        value={edu.startDate || ''}
+                                                                        onChange={(e) => updateArrayField('education', idx, 'startDate', e.target.value)}
+                                                                    />
+                                                                </div>
+                                                                <div className="field-group">
+                                                                    <label>Fin</label>
+                                                                    <input
+                                                                        type="month"
+                                                                        value={edu.endDate || ''}
+                                                                        onChange={(e) => updateArrayField('education', idx, 'endDate', e.target.value)}
+                                                                    />
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="field-group">
+                                                                <div className="field-header">
+                                                                    <label>Descripción (Opcional)</label>
+                                                                    <button
+                                                                        className="improve-btn"
+                                                                        onClick={() =>
+                                                                            openImproveModal({
+                                                                                title: `Estudio ${idx + 1} - Descripción`,
+                                                                                sectionType: `education.description`,
+                                                                                text: edu.description,
+                                                                                applySuggestion: (s) => updateArrayField('education', idx, 'description', s),
+                                                                            })
+                                                                        }
+                                                                        disabled={isImproving}
+                                                                    >
+                                                                        {isImproving === 'education.description' ? (
+                                                                            <Loader2 size={14} className="animate-spin" />
+                                                                        ) : (
+                                                                            <>
+                                                                                <Wand2 size={14} />
+                                                                                <span>Mejorar con IA</span>
+                                                                            </>
+                                                                        )}
+                                                                    </button>
+                                                                </div>
+                                                                <textarea
+                                                                    value={edu.description || ''}
+                                                                    onChange={(e) => updateArrayField('education', idx, 'description', e.target.value)}
+                                                                    rows={3}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    ))}
+
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={() =>
+                                                            addArrayItem('education', {
+                                                                institution: '',
+                                                                degree: '',
+                                                                field: '',
+                                                                startDate: '',
+                                                                endDate: '',
+                                                                description: '',
+                                                            })
+                                                        }
+                                                    >
+                                                        Agregar estudio
+                                                    </Button>
+                                                </>
+                                            )}
+
+                                            {sectionId === 'technicalSkills' && (
+                                                <>
+                                                    {(cvData?.technicalSkills || []).map((skill, idx) => (
+                                                        <div key={idx} className="array-item compact">
+                                                            <div className="two-col">
+                                                                <div className="field-group">
+                                                                    <label>Habilidad</label>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={skill.name || ''}
+                                                                        onChange={(e) => updateArrayField('technicalSkills', idx, 'name', e.target.value)}
+                                                                    />
+                                                                </div>
+                                                                <div className="field-group">
+                                                                    <label>Nivel</label>
+                                                                    <select
+                                                                        value={skill.level ?? 3}
+                                                                        onChange={(e) => updateArrayField('technicalSkills', idx, 'level', Number(e.target.value))}
+                                                                    >
+                                                                        {[1, 2, 3, 4, 5].map((n) => (
+                                                                            <option key={n} value={n}>{n}</option>
+                                                                        ))}
+                                                                    </select>
+                                                                </div>
+                                                            </div>
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
-                                                                onClick={() => removeArrayItem('workExperience', idx)}
+                                                                onClick={() => removeArrayItem('technicalSkills', idx)}
                                                             >
                                                                 Eliminar
                                                             </Button>
                                                         </div>
+                                                    ))}
 
-                                                        <div className="field-group">
-                                                            <label>Cargo</label>
-                                                            <input
-                                                                type="text"
-                                                                value={exp.position || ''}
-                                                                onChange={(e) => updateArrayField('workExperience', idx, 'position', e.target.value)}
-                                                            />
-                                                        </div>
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={() => addArrayItem('technicalSkills', { name: '', level: 3 })}
+                                                    >
+                                                        Agregar habilidad
+                                                    </Button>
+                                                </>
+                                            )}
 
-                                                        <div className="field-group">
-                                                            <label>Empresa</label>
-                                                            <input
-                                                                type="text"
-                                                                value={exp.company || ''}
-                                                                onChange={(e) => updateArrayField('workExperience', idx, 'company', e.target.value)}
-                                                            />
-                                                        </div>
-
-                                                        <div className="field-group">
-                                                            <label>Ubicación (Opcional)</label>
-                                                            <input
-                                                                type="text"
-                                                                value={exp.location || ''}
-                                                                onChange={(e) => updateArrayField('workExperience', idx, 'location', e.target.value)}
-                                                            />
-                                                        </div>
-
-                                                        <div className="two-col">
-                                                            <div className="field-group">
-                                                                <label>Inicio</label>
-                                                                <input
-                                                                    type="month"
-                                                                    value={exp.startDate || ''}
-                                                                    onChange={(e) => updateArrayField('workExperience', idx, 'startDate', e.target.value)}
-                                                                />
-                                                            </div>
-                                                            <div className="field-group">
-                                                                <label>Fin</label>
-                                                                <input
-                                                                    type="month"
-                                                                    value={exp.endDate || ''}
-                                                                    onChange={(e) => updateArrayField('workExperience', idx, 'endDate', e.target.value)}
-                                                                    disabled={!!exp.isCurrent}
-                                                                />
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="field-group checkbox-row">
-                                                            <label>
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={!!exp.isCurrent}
-                                                                    onChange={(e) => updateArrayField('workExperience', idx, 'isCurrent', e.target.checked)}
-                                                                />
-                                                                Trabajo actual
-                                                            </label>
-                                                        </div>
-
-                                                        <div className="field-group">
-                                                            <div className="field-header">
-                                                                <label>Descripción</label>
-                                                                <button
-                                                                    className="improve-btn"
-                                                                    onClick={() =>
-                                                                        openImproveModal({
-                                                                            title: `Experiencia ${idx + 1} - Descripción`,
-                                                                            sectionType: `workExperience.description`,
-                                                                            text: exp.description,
-                                                                            applySuggestion: (s) => updateArrayField('workExperience', idx, 'description', s),
-                                                                        })
-                                                                    }
-                                                                    disabled={isImproving}
-                                                                >
-                                                                    {isImproving === 'workExperience.description' ? (
-                                                                        <Loader2 size={14} className="animate-spin" />
-                                                                    ) : (
-                                                                        <>
-                                                                            <Wand2 size={14} />
-                                                                            <span>Mejorar con IA</span>
-                                                                        </>
-                                                                    )}
-                                                                </button>
-                                                            </div>
-                                                            <textarea
-                                                                value={exp.description || ''}
-                                                                onChange={(e) => updateArrayField('workExperience', idx, 'description', e.target.value)}
-                                                                rows={4}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                ))}
-
-                                                <Button
-                                                    variant="outline"
-                                                    onClick={() =>
-                                                        addArrayItem('workExperience', {
-                                                            company: '',
-                                                            position: '',
-                                                            startDate: '',
-                                                            endDate: '',
-                                                            isCurrent: false,
-                                                            description: '',
-                                                            location: '',
-                                                        })
-                                                    }
-                                                >
-                                                    Agregar experiencia
-                                                </Button>
-                                            </>
-                                        )}
-
-                                        {sectionId === 'education' && (
-                                            <>
-                                                {(cvData?.education || []).map((edu, idx) => (
-                                                    <div key={idx} className="array-item">
-                                                        <div className="array-item-header">
-                                                            <strong>Estudio {idx + 1}</strong>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={() => removeArrayItem('education', idx)}
-                                                            >
-                                                                Eliminar
-                                                            </Button>
-                                                        </div>
-
-                                                        <div className="field-group">
-                                                            <label>Institución</label>
-                                                            <input
-                                                                type="text"
-                                                                value={edu.institution || ''}
-                                                                onChange={(e) => updateArrayField('education', idx, 'institution', e.target.value)}
-                                                            />
-                                                        </div>
-
-                                                        <div className="field-group">
-                                                            <label>Título</label>
-                                                            <input
-                                                                type="text"
-                                                                value={edu.degree || ''}
-                                                                onChange={(e) => updateArrayField('education', idx, 'degree', e.target.value)}
-                                                            />
-                                                        </div>
-
-                                                        <div className="field-group">
-                                                            <label>Área (Opcional)</label>
-                                                            <input
-                                                                type="text"
-                                                                value={edu.field || ''}
-                                                                onChange={(e) => updateArrayField('education', idx, 'field', e.target.value)}
-                                                            />
-                                                        </div>
-
-                                                        <div className="two-col">
-                                                            <div className="field-group">
-                                                                <label>Inicio</label>
-                                                                <input
-                                                                    type="month"
-                                                                    value={edu.startDate || ''}
-                                                                    onChange={(e) => updateArrayField('education', idx, 'startDate', e.target.value)}
-                                                                />
-                                                            </div>
-                                                            <div className="field-group">
-                                                                <label>Fin</label>
-                                                                <input
-                                                                    type="month"
-                                                                    value={edu.endDate || ''}
-                                                                    onChange={(e) => updateArrayField('education', idx, 'endDate', e.target.value)}
-                                                                />
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="field-group">
-                                                            <div className="field-header">
-                                                                <label>Descripción (Opcional)</label>
-                                                                <button
-                                                                    className="improve-btn"
-                                                                    onClick={() =>
-                                                                        openImproveModal({
-                                                                            title: `Estudio ${idx + 1} - Descripción`,
-                                                                            sectionType: `education.description`,
-                                                                            text: edu.description,
-                                                                            applySuggestion: (s) => updateArrayField('education', idx, 'description', s),
-                                                                        })
-                                                                    }
-                                                                    disabled={isImproving}
-                                                                >
-                                                                    {isImproving === 'education.description' ? (
-                                                                        <Loader2 size={14} className="animate-spin" />
-                                                                    ) : (
-                                                                        <>
-                                                                            <Wand2 size={14} />
-                                                                            <span>Mejorar con IA</span>
-                                                                        </>
-                                                                    )}
-                                                                </button>
-                                                            </div>
-                                                            <textarea
-                                                                value={edu.description || ''}
-                                                                onChange={(e) => updateArrayField('education', idx, 'description', e.target.value)}
-                                                                rows={3}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                ))}
-
-                                                <Button
-                                                    variant="outline"
-                                                    onClick={() =>
-                                                        addArrayItem('education', {
-                                                            institution: '',
-                                                            degree: '',
-                                                            field: '',
-                                                            startDate: '',
-                                                            endDate: '',
-                                                            description: '',
-                                                        })
-                                                    }
-                                                >
-                                                    Agregar estudio
-                                                </Button>
-                                            </>
-                                        )}
-
-                                        {sectionId === 'technicalSkills' && (
-                                            <>
-                                                {(cvData?.technicalSkills || []).map((skill, idx) => (
-                                                    <div key={idx} className="array-item compact">
-                                                        <div className="two-col">
+                                            {sectionId === 'softSkills' && (
+                                                <>
+                                                    {(cvData?.softSkills || []).map((skill, idx) => (
+                                                        <div key={idx} className="array-item compact">
                                                             <div className="field-group">
                                                                 <label>Habilidad</label>
                                                                 <input
                                                                     type="text"
                                                                     value={skill.name || ''}
-                                                                    onChange={(e) => updateArrayField('technicalSkills', idx, 'name', e.target.value)}
+                                                                    onChange={(e) => updateArrayField('softSkills', idx, 'name', e.target.value)}
                                                                 />
                                                             </div>
-                                                            <div className="field-group">
-                                                                <label>Nivel</label>
-                                                                <select
-                                                                    value={skill.level ?? 3}
-                                                                    onChange={(e) => updateArrayField('technicalSkills', idx, 'level', Number(e.target.value))}
-                                                                >
-                                                                    {[1, 2, 3, 4, 5].map((n) => (
-                                                                        <option key={n} value={n}>{n}</option>
-                                                                    ))}
-                                                                </select>
-                                                            </div>
-                                                        </div>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => removeArrayItem('technicalSkills', idx)}
-                                                        >
-                                                            Eliminar
-                                                        </Button>
-                                                    </div>
-                                                ))}
-
-                                                <Button
-                                                    variant="outline"
-                                                    onClick={() => addArrayItem('technicalSkills', { name: '', level: 3 })}
-                                                >
-                                                    Agregar habilidad
-                                                </Button>
-                                            </>
-                                        )}
-
-                                        {sectionId === 'softSkills' && (
-                                            <>
-                                                {(cvData?.softSkills || []).map((skill, idx) => (
-                                                    <div key={idx} className="array-item compact">
-                                                        <div className="field-group">
-                                                            <label>Habilidad</label>
-                                                            <input
-                                                                type="text"
-                                                                value={skill.name || ''}
-                                                                onChange={(e) => updateArrayField('softSkills', idx, 'name', e.target.value)}
-                                                            />
-                                                        </div>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => removeArrayItem('softSkills', idx)}
-                                                        >
-                                                            Eliminar
-                                                        </Button>
-                                                    </div>
-                                                ))}
-
-                                                <Button
-                                                    variant="outline"
-                                                    onClick={() => addArrayItem('softSkills', { name: '' })}
-                                                >
-                                                    Agregar habilidad
-                                                </Button>
-                                            </>
-                                        )}
-
-                                        {sectionId === 'languages' && (
-                                            <>
-                                                {(cvData?.languages || []).map((lang, idx) => (
-                                                    <div key={idx} className="array-item compact">
-                                                        <div className="two-col">
-                                                            <div className="field-group">
-                                                                <label>Idioma</label>
-                                                                <input
-                                                                    type="text"
-                                                                    value={lang.language || ''}
-                                                                    onChange={(e) => updateArrayField('languages', idx, 'language', e.target.value)}
-                                                                />
-                                                            </div>
-                                                            <div className="field-group">
-                                                                <label>Nivel</label>
-                                                                <input
-                                                                    type="text"
-                                                                    value={lang.level || ''}
-                                                                    onChange={(e) => updateArrayField('languages', idx, 'level', e.target.value)}
-                                                                    placeholder="Ej: B2"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => removeArrayItem('languages', idx)}
-                                                        >
-                                                            Eliminar
-                                                        </Button>
-                                                    </div>
-                                                ))}
-
-                                                <Button
-                                                    variant="outline"
-                                                    onClick={() => addArrayItem('languages', { language: '', level: '' })}
-                                                >
-                                                    Agregar idioma
-                                                </Button>
-                                            </>
-                                        )}
-
-                                        {sectionId === 'certifications' && (
-                                            <>
-                                                {(cvData?.certifications || []).map((cert, idx) => (
-                                                    <div key={idx} className="array-item">
-                                                        <div className="array-item-header">
-                                                            <strong>Certificación {idx + 1}</strong>
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
-                                                                onClick={() => removeArrayItem('certifications', idx)}
+                                                                onClick={() => removeArrayItem('softSkills', idx)}
                                                             >
                                                                 Eliminar
                                                             </Button>
                                                         </div>
+                                                    ))}
 
-                                                        <div className="field-group">
-                                                            <label>Nombre</label>
-                                                            <input
-                                                                type="text"
-                                                                value={cert.name || ''}
-                                                                onChange={(e) => updateArrayField('certifications', idx, 'name', e.target.value)}
-                                                            />
-                                                        </div>
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={() => addArrayItem('softSkills', { name: '' })}
+                                                    >
+                                                        Agregar habilidad
+                                                    </Button>
+                                                </>
+                                            )}
 
-                                                        <div className="field-group">
-                                                            <label>Institución</label>
-                                                            <input
-                                                                type="text"
-                                                                value={cert.institution || ''}
-                                                                onChange={(e) => updateArrayField('certifications', idx, 'institution', e.target.value)}
-                                                            />
-                                                        </div>
-
-                                                        <div className="field-group">
-                                                            <label>Fecha (Opcional)</label>
-                                                            <input
-                                                                type="month"
-                                                                value={cert.date || ''}
-                                                                onChange={(e) => updateArrayField('certifications', idx, 'date', e.target.value)}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                ))}
-
-                                                <Button
-                                                    variant="outline"
-                                                    onClick={() => addArrayItem('certifications', { name: '', institution: '', date: '' })}
-                                                >
-                                                    Agregar certificación
-                                                </Button>
-                                            </>
-                                        )}
-
-                                        {sectionId === 'projects' && (
-                                            <>
-                                                {(cvData?.projects || []).map((project, idx) => (
-                                                    <div key={idx} className="array-item">
-                                                        <div className="array-item-header">
-                                                            <strong>Proyecto {idx + 1}</strong>
+                                            {sectionId === 'languages' && (
+                                                <>
+                                                    {(cvData?.languages || []).map((lang, idx) => (
+                                                        <div key={idx} className="array-item compact">
+                                                            <div className="two-col">
+                                                                <div className="field-group">
+                                                                    <label>Idioma</label>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={lang.language || ''}
+                                                                        onChange={(e) => updateArrayField('languages', idx, 'language', e.target.value)}
+                                                                    />
+                                                                </div>
+                                                                <div className="field-group">
+                                                                    <label>Nivel</label>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={lang.level || ''}
+                                                                        onChange={(e) => updateArrayField('languages', idx, 'level', e.target.value)}
+                                                                        placeholder="Ej: B2"
+                                                                    />
+                                                                </div>
+                                                            </div>
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
-                                                                onClick={() => removeArrayItem('projects', idx)}
+                                                                onClick={() => removeArrayItem('languages', idx)}
                                                             >
                                                                 Eliminar
                                                             </Button>
                                                         </div>
+                                                    ))}
 
-                                                        <div className="field-group">
-                                                            <label>Nombre</label>
-                                                            <input
-                                                                type="text"
-                                                                value={project.name || ''}
-                                                                onChange={(e) => updateArrayField('projects', idx, 'name', e.target.value)}
-                                                            />
-                                                        </div>
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={() => addArrayItem('languages', { language: '', level: '' })}
+                                                    >
+                                                        Agregar idioma
+                                                    </Button>
+                                                </>
+                                            )}
 
-                                                        <div className="field-group">
-                                                            <label>URL (Opcional)</label>
-                                                            <input
-                                                                type="url"
-                                                                value={project.url || ''}
-                                                                onChange={(e) => updateArrayField('projects', idx, 'url', e.target.value)}
-                                                                placeholder="https://..."
-                                                            />
-                                                        </div>
-
-                                                        <div className="field-group">
-                                                            <label>Tecnologías (separadas por coma)</label>
-                                                            <input
-                                                                type="text"
-                                                                value={Array.isArray(project.technologies) ? project.technologies.join(', ') : (project.technologies || '')}
-                                                                onChange={(e) =>
-                                                                    updateArrayField(
-                                                                        'projects',
-                                                                        idx,
-                                                                        'technologies',
-                                                                        e.target.value
-                                                                            .split(',')
-                                                                            .map((t) => t.trim())
-                                                                            .filter(Boolean)
-                                                                    )
-                                                                }
-                                                                placeholder="React, Node, ..."
-                                                            />
-                                                        </div>
-
-                                                        <div className="field-group">
-                                                            <div className="field-header">
-                                                                <label>Descripción</label>
-                                                                <button
-                                                                    className="improve-btn"
-                                                                    onClick={() =>
-                                                                        openImproveModal({
-                                                                            title: `Proyecto ${idx + 1} - Descripción`,
-                                                                            sectionType: `projects.description`,
-                                                                            text: project.description,
-                                                                            applySuggestion: (s) => updateArrayField('projects', idx, 'description', s),
-                                                                        })
-                                                                    }
-                                                                    disabled={isImproving}
+                                            {sectionId === 'certifications' && (
+                                                <>
+                                                    {(cvData?.certifications || []).map((cert, idx) => (
+                                                        <div key={idx} className="array-item">
+                                                            <div className="array-item-header">
+                                                                <strong>Certificación {idx + 1}</strong>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => removeArrayItem('certifications', idx)}
                                                                 >
-                                                                    {isImproving === 'projects.description' ? (
-                                                                        <Loader2 size={14} className="animate-spin" />
-                                                                    ) : (
-                                                                        <>
-                                                                            <Wand2 size={14} />
-                                                                            <span>Mejorar con IA</span>
-                                                                        </>
-                                                                    )}
-                                                                </button>
+                                                                    Eliminar
+                                                                </Button>
                                                             </div>
-                                                            <textarea
-                                                                value={project.description || ''}
-                                                                onChange={(e) => updateArrayField('projects', idx, 'description', e.target.value)}
-                                                                rows={4}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                ))}
 
-                                                <Button
-                                                    variant="outline"
-                                                    onClick={() => addArrayItem('projects', { name: '', description: '', technologies: [], url: '' })}
-                                                >
-                                                    Agregar proyecto
-                                                </Button>
-                                            </>
-                                        )}
-
-                                        {sectionId === 'socialLinks' && (
-                                            <>
-                                                {(cvData?.socialLinks || []).map((link, idx) => (
-                                                    <div key={idx} className="array-item compact">
-                                                        <div className="two-col">
                                                             <div className="field-group">
-                                                                <label>Plataforma</label>
+                                                                <label>Nombre</label>
                                                                 <input
                                                                     type="text"
-                                                                    value={link.platform || ''}
-                                                                    onChange={(e) => updateArrayField('socialLinks', idx, 'platform', e.target.value)}
-                                                                    placeholder="LinkedIn"
+                                                                    value={cert.name || ''}
+                                                                    onChange={(e) => updateArrayField('certifications', idx, 'name', e.target.value)}
                                                                 />
                                                             </div>
+
                                                             <div className="field-group">
-                                                                <label>URL</label>
+                                                                <label>Institución</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={cert.institution || ''}
+                                                                    onChange={(e) => updateArrayField('certifications', idx, 'institution', e.target.value)}
+                                                                />
+                                                            </div>
+
+                                                            <div className="field-group">
+                                                                <label>Fecha (Opcional)</label>
+                                                                <input
+                                                                    type="month"
+                                                                    value={cert.date || ''}
+                                                                    onChange={(e) => updateArrayField('certifications', idx, 'date', e.target.value)}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    ))}
+
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={() => addArrayItem('certifications', { name: '', institution: '', date: '' })}
+                                                    >
+                                                        Agregar certificación
+                                                    </Button>
+                                                </>
+                                            )}
+
+                                            {sectionId === 'projects' && (
+                                                <>
+                                                    {(cvData?.projects || []).map((project, idx) => (
+                                                        <div key={idx} className="array-item">
+                                                            <div className="array-item-header">
+                                                                <strong>Proyecto {idx + 1}</strong>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => removeArrayItem('projects', idx)}
+                                                                >
+                                                                    Eliminar
+                                                                </Button>
+                                                            </div>
+
+                                                            <div className="field-group">
+                                                                <label>Nombre</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={project.name || ''}
+                                                                    onChange={(e) => updateArrayField('projects', idx, 'name', e.target.value)}
+                                                                />
+                                                            </div>
+
+                                                            <div className="field-group">
+                                                                <label>URL (Opcional)</label>
                                                                 <input
                                                                     type="url"
-                                                                    value={link.url || ''}
-                                                                    onChange={(e) => updateArrayField('socialLinks', idx, 'url', e.target.value)}
+                                                                    value={project.url || ''}
+                                                                    onChange={(e) => updateArrayField('projects', idx, 'url', e.target.value)}
                                                                     placeholder="https://..."
                                                                 />
                                                             </div>
-                                                        </div>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => removeArrayItem('socialLinks', idx)}
-                                                        >
-                                                            Eliminar
-                                                        </Button>
-                                                    </div>
-                                                ))}
 
-                                                <Button
-                                                    variant="outline"
-                                                    onClick={() => addArrayItem('socialLinks', { platform: '', url: '' })}
-                                                >
-                                                    Agregar red social
-                                                </Button>
-                                            </>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
+                                                            <div className="field-group">
+                                                                <label>Tecnologías (separadas por coma)</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={Array.isArray(project.technologies) ? project.technologies.join(', ') : (project.technologies || '')}
+                                                                    onChange={(e) =>
+                                                                        updateArrayField(
+                                                                            'projects',
+                                                                            idx,
+                                                                            'technologies',
+                                                                            e.target.value
+                                                                                .split(',')
+                                                                                .map((t) => t.trim())
+                                                                                .filter(Boolean)
+                                                                        )
+                                                                    }
+                                                                    placeholder="React, Node, ..."
+                                                                />
+                                                            </div>
+
+                                                            <div className="field-group">
+                                                                <div className="field-header">
+                                                                    <label>Descripción</label>
+                                                                    <button
+                                                                        className="improve-btn"
+                                                                        onClick={() =>
+                                                                            openImproveModal({
+                                                                                title: `Proyecto ${idx + 1} - Descripción`,
+                                                                                sectionType: `projects.description`,
+                                                                                text: project.description,
+                                                                                applySuggestion: (s) => updateArrayField('projects', idx, 'description', s),
+                                                                            })
+                                                                        }
+                                                                        disabled={isImproving}
+                                                                    >
+                                                                        {isImproving === 'projects.description' ? (
+                                                                            <Loader2 size={14} className="animate-spin" />
+                                                                        ) : (
+                                                                            <>
+                                                                                <Wand2 size={14} />
+                                                                                <span>Mejorar con IA</span>
+                                                                            </>
+                                                                        )}
+                                                                    </button>
+                                                                </div>
+                                                                <textarea
+                                                                    value={project.description || ''}
+                                                                    onChange={(e) => updateArrayField('projects', idx, 'description', e.target.value)}
+                                                                    rows={4}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    ))}
+
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={() => addArrayItem('projects', { name: '', description: '', technologies: [], url: '' })}
+                                                    >
+                                                        Agregar proyecto
+                                                    </Button>
+                                                </>
+                                            )}
+
+                                            {sectionId === 'socialLinks' && (
+                                                <>
+                                                    {(cvData?.socialLinks || []).map((link, idx) => (
+                                                        <div key={idx} className="array-item compact">
+                                                            <div className="two-col">
+                                                                <div className="field-group">
+                                                                    <label>Plataforma</label>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={link.platform || ''}
+                                                                        onChange={(e) => updateArrayField('socialLinks', idx, 'platform', e.target.value)}
+                                                                        placeholder="LinkedIn"
+                                                                    />
+                                                                </div>
+                                                                <div className="field-group">
+                                                                    <label>URL</label>
+                                                                    <input
+                                                                        type="url"
+                                                                        value={link.url || ''}
+                                                                        onChange={(e) => updateArrayField('socialLinks', idx, 'url', e.target.value)}
+                                                                        placeholder="https://..."
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => removeArrayItem('socialLinks', idx)}
+                                                            >
+                                                                Eliminar
+                                                            </Button>
+                                                        </div>
+                                                    ))}
+
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={() => addArrayItem('socialLinks', { platform: '', url: '' })}
+                                                    >
+                                                        Agregar red social
+                                                    </Button>
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
+
                 </aside>
 
                 {/* Right Panel - Preview */}
-                <div className={`preview-panel ${activeTab === 'preview' ? 'active' : ''}`}>
+                <div className="preview-panel">
                     <div className="preview-wrapper">
                         {TemplateComponent ? (
                             <>
@@ -1192,8 +1187,8 @@ const Editor = () => {
                         )}
                     </div>
                 </div>
-            </div>
-        </main>
+            </div >
+        </main >
     );
 };
 

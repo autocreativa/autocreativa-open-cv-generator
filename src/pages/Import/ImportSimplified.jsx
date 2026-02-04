@@ -15,7 +15,7 @@ const ImportSimplified = () => {
     const pdf = usePDFReader();
     const ocr = useOCRReader();
 
-    const [uploadMethod, setUploadMethod] = useState('file'); // 'file' | 'camera'
+    const [uploadMethod, setUploadMethod] = useState(null); // null | 'file' | 'camera'
     const [selectedFile, setSelectedFile] = useState(null);
     const [selectedImage, setSelectedImage] = useState(null);
     const [showPreview, setShowPreview] = useState(false);
@@ -148,21 +148,23 @@ const ImportSimplified = () => {
                         </div>
 
                         {/* Uploader */}
-                        <div className="uploader-section">
-                            {uploadMethod === 'file' ? (
-                                <PDFUploader
-                                    onFileSelect={handleFileSelect}
-                                    disabled={active.isLoading}
-                                    error={active.error}
-                                />
-                            ) : (
-                                <ImageUploader
-                                    onFileSelect={handleImageSelect}
-                                    disabled={active.isLoading}
-                                    error={active.error}
-                                />
-                            )}
-                        </div>
+                        {uploadMethod && (
+                            <div className="uploader-section">
+                                {uploadMethod === 'file' ? (
+                                    <PDFUploader
+                                        onFileSelect={handleFileSelect}
+                                        disabled={active.isLoading}
+                                        error={active.error}
+                                    />
+                                ) : (
+                                    <ImageUploader
+                                        onFileSelect={handleImageSelect}
+                                        disabled={active.isLoading}
+                                        error={active.error}
+                                    />
+                                )}
+                            </div>
+                        )}
 
                         {/* Progress */}
                         {active.isLoading && (
@@ -181,21 +183,23 @@ const ImportSimplified = () => {
                         )}
 
                         {/* Actions */}
-                        <div className="import-actions">
-                            <Button
-                                size="lg"
-                                onClick={handleProcess}
-                                disabled={(uploadMethod === 'file' ? !selectedFile : !selectedImage) || active.isLoading}
-                                loading={active.isLoading}
-                                leftIcon={uploadMethod === 'camera' || fileIsImage ? <ImageIcon size={18} /> : <FileText size={18} />}
-                            >
-                                {active.isLoading
-                                    ? 'Procesando...'
-                                    : (uploadMethod === 'camera' || fileIsImage)
-                                        ? 'Analizar imagen con OCR'
-                                        : 'Analizar PDF con IA'}
-                            </Button>
-                        </div>
+                        {uploadMethod && (
+                            <div className="import-actions">
+                                <Button
+                                    size="lg"
+                                    onClick={handleProcess}
+                                    disabled={(uploadMethod === 'file' ? !selectedFile : !selectedImage) || active.isLoading}
+                                    loading={active.isLoading}
+                                    leftIcon={uploadMethod === 'camera' || fileIsImage ? <ImageIcon size={18} /> : <FileText size={18} />}
+                                >
+                                    {active.isLoading
+                                        ? 'Procesando...'
+                                        : (uploadMethod === 'camera' || fileIsImage)
+                                            ? 'Analizar imagen con OCR'
+                                            : 'Analizar PDF con IA'}
+                                </Button>
+                            </div>
+                        )}
 
                         {/* Alternative */}
                         <div className="import-alternative">

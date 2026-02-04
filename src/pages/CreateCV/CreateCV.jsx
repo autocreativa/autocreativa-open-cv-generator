@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Edit3, LayoutTemplate, Loader2, Image as ImageIcon, X } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Edit3, LayoutTemplate, Loader2, Image as ImageIcon, X, ArrowRight } from 'lucide-react';
 import OnboardingModal from '../../components/onboarding/OnboardingModal';
 import ChatInterface from '../../components/onboarding/ChatInterface';
 import ImageUploader from '../../components/pdf/ImageUploader';
@@ -115,6 +115,10 @@ const CreateCV = () => {
         }
     };
 
+    const handleSkip = () => {
+        navigate('/seleccionar-plantilla?from=assistant_skip');
+    };
+
     return (
         <main className="create-cv-page">
             {/* Onboarding Modal */}
@@ -141,6 +145,15 @@ const CreateCV = () => {
                             <div>
                                 <h1>Crea tu CV con nuestro asistente</h1>
                                 <p>Responde las preguntas y dejaremos todo listo para ti</p>
+                            </div>
+
+                            <div className="skip-action">
+                                <Button
+                                    onClick={handleSkip}
+                                    rightIcon={<ArrowRight size={18} />}
+                                >
+                                    Saltar este paso y seleccionar plantilla
+                                </Button>
                             </div>
                         </div>
 
@@ -181,7 +194,6 @@ const CreateCV = () => {
                             sections={selectedSectionsLocal}
                             onComplete={handleChatCompleteWithSections}
                             initialData={cvData}
-                            onStartWithSampleTemplate={handleStartWithSampleTemplate}
                         />
                     </div>
 

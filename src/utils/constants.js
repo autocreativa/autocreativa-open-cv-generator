@@ -233,16 +233,16 @@ export const getSampleCVData = () => {
         ],
         profileImage: null,
         contactInfo: {
-            fullName: 'María Fernanda López',
-            title: 'Desarrolladora Frontend',
-            email: 'maria.lopez@email.com',
+            fullName: 'Juan Pérez',
+            title: 'Desarrollador Frontend',
+            email: 'juan.perez@email.com',
             phone: '+56 9 1234 5678',
             address: 'Av. Providencia 1234',
             city: 'Santiago',
             country: 'Chile',
         },
         professionalSummary:
-            'Desarrolladora Frontend con experiencia en React y diseño de interfaces. Enfocada en crear productos rápidos, accesibles y con excelente UX. Me entusiasma trabajar en equipos colaborativos y medir impacto con datos.',
+            'Desarrollador Frontend con experiencia en React y diseño de interfaces. Enfocado en crear productos rápidos, accesibles y con excelente UX. Me entusiasma trabajar en equipos colaborativos y medir impacto con datos.',
         workExperience: [
             {
                 company: 'Autocreativa',
@@ -307,9 +307,9 @@ export const getSampleCVData = () => {
             },
         ],
         socialLinks: [
-            { platform: 'LinkedIn', url: 'https://linkedin.com/in/maria-lopez' },
-            { platform: 'GitHub', url: 'https://github.com/marialopez' },
-            { platform: 'Portafolio', url: 'https://maria.dev' },
+            { platform: 'LinkedIn', url: 'https://linkedin.com/in/juan-perez' },
+            { platform: 'GitHub', url: 'https://github.com/juanperez' },
+            { platform: 'Portafolio', url: 'https://juan.dev' },
         ],
     };
 };

@@ -10,7 +10,16 @@
  */
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
-const AI_ENDPOINT = `${API_BASE || ''}/api/ai-chat`;
+const AI_CHAT_ENDPOINT_ENV = String(import.meta.env.VITE_AI_CHAT_ENDPOINT || '').trim();
+const AI_CHAT_PATH = String(import.meta.env.VITE_AI_CHAT_PATH || '/api/ai-chat').trim();
+
+const joinBaseAndPath = (base, path) => {
+    const safePath = path.startsWith('/') ? path : `/${path}`;
+    if (!base) return safePath;
+    return `${base}${safePath}`;
+};
+
+const AI_ENDPOINT = (AI_CHAT_ENDPOINT_ENV || joinBaseAndPath(API_BASE, AI_CHAT_PATH)).replace(/\/$/, '');
 
 /**
  * Construye un prompt de texto plano a partir de mensajes tipo chat

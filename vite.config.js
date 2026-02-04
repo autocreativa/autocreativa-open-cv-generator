@@ -6,8 +6,14 @@ export default defineConfig({
   plugins: [react()],
   base: '/cv-generator/',
   server: {
+    host: true,
     proxy: {
-      '/api': 'http://localhost:5174',
+      '/api': {
+        target: 'http://localhost:5174',
+        changeOrigin: true,
+        timeout: 130000,
+        proxyTimeout: 130000,
+      },
     },
   },
   build: {

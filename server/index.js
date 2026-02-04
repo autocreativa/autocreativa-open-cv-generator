@@ -382,7 +382,7 @@ apiRouter.get('/health', (_req, res) => {
 });
 
 // ApiFreeLLM proxy endpoint (evita CORS en frontend)
-apiRouter.post('/ai-chat', async (req, res) => {
+const handleAiChat = async (req, res) => {
     const { prompt, options } = req.body || {};
 
     if (!prompt || typeof prompt !== 'string') {
@@ -460,7 +460,10 @@ apiRouter.post('/ai-chat', async (req, res) => {
     } finally {
         clearTimeout(timeout);
     }
-});
+};
+
+apiRouter.post('/ai-chat', handleAiChat);
+apiRouter.post('/ai-chat-v2', handleAiChat);
 
 apiRouter.post('/support', supportLimiter, supportSlowDown, async (req, res) => {
     const {

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Search, Filter, Check, LayoutTemplate } from 'lucide-react';
+import { ArrowLeft, Search, Filter, Check, LayoutTemplate, X, Eye } from 'lucide-react';
 import Button from '../../components/common/Button';
 import { templates, getTemplatesByCategory } from '../../templates';
 import { useCV } from '../../context/CVContext';
@@ -24,6 +24,7 @@ const SelectTemplate = () => {
     const [activeCategory, setActiveCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [hoveredTemplate, setHoveredTemplate] = useState(null);
+    const [previewTemplate, setPreviewTemplate] = useState(null);
     const canUseSample = from !== 'import' && from !== 'assistant' && cvData?.onboardingSource !== 'assistant';
     const [useSampleData, setUseSampleData] = useState(canUseSample && sampleFromQuery);
 
@@ -126,6 +127,7 @@ const SelectTemplate = () => {
                     {filteredTemplates.map((template) => {
                         const isSelected = selectedTemplate === template.id;
                         const isHovered = hoveredTemplate === template.id;
+                        const TemplateComponent = template.component;
 
                         return (
                             <div
@@ -137,14 +139,12 @@ const SelectTemplate = () => {
                             >
                                 {/* Preview */}
                                 <div className="template-preview">
-                                    <div className="preview-placeholder">
-                                        <div className="preview-header-mock" />
-                                        <div className="preview-content-mock">
-                                            <div className="mock-line w-60" />
-                                            <div className="mock-line w-40" />
-                                            <div className="mock-line w-80" />
-                                            <div className="mock-line w-50" />
-                                        </div>
+                                    <div className="preview-scale-container">
+                                        <TemplateComponent
+                                            cvData={getSampleCVData()}
+                                            sections={[]}
+                                            isEditing={false}
+                                        />
                                     </div>
 
                                     {/* Overlay */}
@@ -156,12 +156,26 @@ const SelectTemplate = () => {
                                                     <span>Seleccionada</span>
                                                 </div>
                                             ) : (
-                                                <Button variant="secondary" size="sm">
-                                                    Seleccionar
-                                                </Button>
+                                                <div className="card-actions">
+                                                    <Button
+                                                        variant="secondary"
+                                                        size="sm"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setPreviewTemplate(template);
+                                                        }}
+                                                        leftIcon={<Eye size={16} />}
+                                                    >
+                                                        Vista previa
+                                                    </Button>
+                                                    <Button variant="primary" size="sm">
+                                                        Seleccionar
+                                                    </Button>
+                                                </div>
                                             )}
                                         </div>
-                                    )}
+                                    )
+                                    }
                                 </div>
 
                                 {/* Info */}
@@ -180,27 +194,71 @@ const SelectTemplate = () => {
                 </div>
 
                 {/* Empty State */}
-                {filteredTemplates.length === 0 && (
-                    <div className="empty-state">
-                        <Filter size={48} />
-                        <h3>No se encontraron plantillas</h3>
-                        <p>Intenta con otros filtros o términos de búsqueda</p>
-                        <Button variant="outline" onClick={() => { setActiveCategory('all'); setSearchQuery(''); }}>
-                            Limpiar filtros
-                        </Button>
-                    </div>
-                )}
+                {
+                    filteredTemplates.length === 0 && (
+                        <div className="empty-state">
+                            <Filter size={48} />
+                            <h3>No se encontraron plantillas</h3>
+                            <p>Intenta con otros filtros o términos de búsqueda</p>
+                            <Button variant="outline" onClick={() => { setActiveCategory('all'); setSearchQuery(''); }}>
+                                Limpiar filtros
+                            </Button>
+                        </div>
+                    )
+                }
 
                 {/* Footer Action */}
-                {selectedTemplate && (
-                    <div className="select-footer">
-                        <div className="selected-info">
-                            <Check size={16} className="check-icon" />
-                            <span>Plantilla seleccionada: <strong>{templates.find(t => t.id === selectedTemplate)?.name}</strong></span>
+                {
+                    selectedTemplate && (
+                        <div className="select-footer">
+                            <div className="selected-info">
+                                <Check size={16} className="check-icon" />
+                                <span>Plantilla seleccionada: <strong>{templates.find(t => t.id === selectedTemplate)?.name}</strong></span>
+                            </div>
+                        </div>
+                    )
+                }
+            </div >
+            {/* Preview Modal */}
+            {previewTemplate && (
+                <div className="preview-modal-overlay" onClick={() => setPreviewTemplate(null)}>
+                    <div className="preview-modal" onClick={(e) => e.stopPropagation()}>
+                        <button className="preview-close-btn" onClick={() => setPreviewTemplate(null)}>
+                            <X size={24} />
+                        </button>
+
+                        <div className="preview-model-header">
+                            <div>
+                                <h2>{previewTemplate.name}</h2>
+                                <p>{previewTemplate.description}</p>
+                            </div>
+                            <Button
+                                onClick={() => handleSelectTemplate(previewTemplate)}
+                                rightIcon={<Check size={18} />}
+                            >
+                                Seleccionar este diseño
+                            </Button>
+                        </div>
+
+                        <div className="preview-content-scroll">
+                            <div className="preview-scale-wrapper">
+                                {(() => {
+                                    const TemplateComponent = previewTemplate.component;
+                                    return (
+                                        <div className="cv-preview-container">
+                                            <TemplateComponent
+                                                cvData={getSampleCVData()}
+                                                sections={[]}
+                                                isEditing={false}
+                                            />
+                                        </div>
+                                    );
+                                })()}
+                            </div>
                         </div>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </main>
     );
 };
