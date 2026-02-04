@@ -37,7 +37,7 @@ const Privacy = () => {
         {
             icon: Database,
             title: '7. Servicios de Terceros',
-            content: 'Utilizamos servicios de terceros como OpenRouter para funciones de IA. Estos servicios tienen sus propias políticas de privacidad. Te recomendamos revisar sus términos cuando uses funciones de IA.'
+            content: 'Utilizamos servicios de terceros de IA (actualmente ApiFreeLLM) para algunas funciones inteligentes. Estos servicios tienen sus propias políticas de privacidad. Te recomendamos revisar sus términos cuando uses funciones de IA.'
         },
         {
             icon: Eye,

@@ -50,12 +50,12 @@ const Header = () => {
                     </Link>
                     <Link to="/importar">
                         <Button variant="outline" size="sm">
-                            Importar PDF
+                            Mejorar CV
                         </Button>
                     </Link>
                     <Link to="/crear">
                         <Button variant="primary" size="sm">
-                            Crear CV Gratis
+                            Crear desde cero
                         </Button>
                     </Link>
                 </div>
@@ -93,12 +93,12 @@ const Header = () => {
                     <div className="mobile-nav-actions">
                         <Link to="/importar" onClick={() => setIsMenuOpen(false)}>
                             <Button variant="outline" fullWidth>
-                                Importar PDF
+                                Mejorar CV
                             </Button>
                         </Link>
                         <Link to="/crear" onClick={() => setIsMenuOpen(false)}>
                             <Button variant="primary" fullWidth>
-                                Crear CV Gratis
+                                Crear desde cero
                             </Button>
                         </Link>
                     </div>

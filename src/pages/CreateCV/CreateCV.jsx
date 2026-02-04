@@ -7,7 +7,7 @@ import ImageUploader from '../../components/pdf/ImageUploader';
 import Button from '../../components/common/Button';
 import { useCV } from '../../context/CVContext';
 import { REQUIRED_SECTIONS } from '../../utils/constants';
-import { cleanOnboardingCvData } from '../../services/openRouterService';
+import { cleanOnboardingCvData } from '../../services/apiFreeLLMService';
 import { useOCRReader } from '../../hooks/useOCRReader';
 import './CreateCV.css';
 

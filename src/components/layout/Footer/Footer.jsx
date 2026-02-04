@@ -46,8 +46,8 @@ const Footer = () => {
         }
 
         return (
-            <Link 
-                to={link.to} 
+            <Link
+                to={link.to}
                 className="footer-link"
                 onClick={handleInternalLinkClick}
             >
@@ -61,7 +61,7 @@ const Footer = () => {
             { to: '/plantillas', label: 'Plantillas' },
             { to: '/como-funciona', label: 'Cómo Funciona' },
             { to: '/crear', label: 'Crear CV' },
-            { to: '/importar', label: 'Importar PDF' },
+            { to: '/importar', label: 'Mejorar CV' },
             { to: '/importar?mode=ocr', label: 'Importar Foto (OCR)' },
         ],
         recursos: [
@@ -84,8 +84,8 @@ const Footer = () => {
             <div className="footer-container container">
                 {/* Brand Section */}
                 <div className="footer-brand">
-                    <Link 
-                        to="/" 
+                    <Link
+                        to="/"
                         className="footer-logo"
                         onClick={handleInternalLinkClick}
                     >

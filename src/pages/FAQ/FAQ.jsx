@@ -67,7 +67,7 @@ const FAQ = () => {
                 },
                 {
                     question: '¿Comparten mi información con terceros?',
-                    answer: 'No compartimos tu información con terceros para fines de marketing. Solo utilizamos servicios de terceros (como OpenRouter para IA) para procesar tus solicitudes de mejora de texto, y estos servicios tienen sus propias políticas de privacidad.'
+                    answer: 'No compartimos tu información con terceros para fines de marketing. Solo utilizamos servicios de terceros de IA (actualmente ApiFreeLLM) para procesar tus solicitudes de mejora de texto, y estos servicios tienen sus propias políticas de privacidad.'
                 }
             ]
         },

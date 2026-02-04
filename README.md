@@ -97,8 +97,7 @@
 ### Servicios IA
 | Tecnología | Descripción |
 |------------|-------------|
-| ![OpenRouter](https://img.shields.io/badge/OpenRouter-API-purple) | API de modelos de IA |
-| **Grok** | Modelo por defecto para generación de texto |
+| **ApiFreeLLM** | API de modelos de IA utilizada para todas las funciones inteligentes |
 
 ### Utilidades
 | Tecnología | Descripción |
@@ -116,7 +115,7 @@
 
 - **Node.js** 18.0 o superior
 - **npm** (incluido con Node.js)
-- **Cuenta en OpenRouter** para funciones de IA ([obtener API key](https://openrouter.ai/))
+- **API Key en ApiFreeLLM** para funciones de IA (ver documentación en https://apifreellm.com/)
 
 ### Paso 1: Clonar el repositorio
 
@@ -144,8 +143,9 @@ nano .env  # o vim, code, etc.
 Completa las siguientes variables esenciales:
 
 ```env
-# API de IA (requerido para funciones de IA)
-VITE_OPENROUTER_API_KEY=tu_api_key_aqui
+# Backend: API de IA (requerido para funciones de IA)
+APIFREELLM_API_KEY=tu_api_key_aqui
+APIFREELLM_API_URL=https://apifreellm.com/api/v1/chat
 
 # Servidor de correo (opcional, para formulario de contacto)
 SMTP_USER=tu_usuario_smtp
@@ -323,7 +323,7 @@ autocreativa-open-cv-generator/
 │   │   ├── 📂 CreateCV/      # Crear CV desde cero
 │   │   └── ...               # Otras páginas
 │   ├── 📂 services/          # Servicios externos
-│   │   ├── openRouterService.js  # Integración IA
+│   │   ├── apiFreeLLMService.js  # Integración IA
 │   │   └── pdfService.js         # Extracción de PDF
 │   ├── 📂 styles/            # Estilos globales
 │   │   └── variables.css     # Variables CSS
@@ -351,7 +351,7 @@ autocreativa-open-cv-generator/
 
 ### Si expones accidentalmente tu API key:
 
-1. **Rota la key inmediatamente** en [OpenRouter](https://openrouter.ai/keys)
+1. **Rota la key inmediatamente** en el panel de ApiFreeLLM
 2. Genera una nueva key y actualiza tu `.env`
 3. Revisa el historial de git con `git log --all --full-history -- .env`
 
@@ -413,7 +413,7 @@ Este proyecto está bajo la licencia **MIT**. Consulta el archivo [LICENSE](LICE
 
 ## 👏 Agradecimientos
 
-- [OpenRouter](https://openrouter.ai/) por la API de IA
+- ApiFreeLLM por la API de IA
 - [Vite](https://vitejs.dev/) por el increíble tooling
 - [React](https://react.dev/) por la biblioteca UI
 - [Lucide](https://lucide.dev/) por los iconos

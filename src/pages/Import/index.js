@@ -1,1 +1,1 @@
-export { default } from './Import';
+export { default } from './ImportSimplified';

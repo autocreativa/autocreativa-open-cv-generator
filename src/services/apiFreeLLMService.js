@@ -1,51 +1,80 @@
 /**
- * CV Magic - OpenRouter AI Service
- * Servicio para comunicación con la API de OpenRouter
+ * CV Magic - ApiFreeLLM AI Service (frontend)
+ * Cliente que habla con nuestro backend (/api/ai-chat),
+ * para evitar CORS y mantener la API key en el servidor.
+ *
+ * Objetivos:
+ * - No llamar directamente a apifreellm.com desde el navegador
+ * - Mantener la misma interfaz pública que el servicio anterior
+ *   (extractCVFromText, cleanOnboardingCvData, improveTextWithAI, etc.)
  */
 
-const OPENROUTER_CONFIG = {
-    apiUrl: import.meta.env.VITE_OPENROUTER_API_URL || 'https://openrouter.ai/api/v1/chat/completions',
-    apiKey: import.meta.env.VITE_OPENROUTER_API_KEY,
-    model: import.meta.env.VITE_OPENROUTER_MODEL || 'x-ai/grok-code-fast-1',
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+const AI_ENDPOINT = `${API_BASE || ''}/api/ai-chat`;
+
+/**
+ * Construye un prompt de texto plano a partir de mensajes tipo chat
+ * @param {Array<{role: 'system'|'user'|'assistant', content: string}>} messages
+ */
+const buildPromptFromMessages = (messages = []) => {
+    const systemParts = messages
+        .filter((m) => m.role === 'system' && m.content)
+        .map((m) => String(m.content).trim());
+
+    const conversationParts = messages
+        .filter((m) => m.role !== 'system' && m.content)
+        .map((m) => `${m.role.toUpperCase()}:\n${String(m.content).trim()}`);
+
+    return [
+        systemParts.length
+            ? `SYSTEM:\n${systemParts.join('\n\n')}`
+            : '',
+        conversationParts.length
+            ? 'CONVERSACIÓN:\n' + conversationParts.join('\n\n')
+            : '',
+    ]
+        .filter(Boolean)
+        .join('\n\n');
 };
 
 /**
- * Llamada base a OpenRouter API
+ * Llamada base al backend (que a su vez llama a ApiFreeLLM)
  * @param {Array} messages - Array de mensajes {role, content}
  * @param {Object} options - Opciones adicionales
- * @returns {Promise<Object>} - Respuesta de la API
+ * @returns {Promise<string>} - Respuesta de la API (campo "response")
  */
-export const callOpenRouter = async (messages, options = {}) => {
-    if (!OPENROUTER_CONFIG.apiKey) {
-        throw new Error('API key de OpenRouter no configurada');
+export const callApiFreeLLM = async (messages, options = {}) => {
+    const prompt = buildPromptFromMessages(messages);
+    if (!prompt || prompt.trim().length === 0) {
+        throw new Error('Prompt vacío para IA');
     }
 
     try {
-        const response = await fetch(OPENROUTER_CONFIG.apiUrl, {
+        const res = await fetch(AI_ENDPOINT, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${OPENROUTER_CONFIG.apiKey}`,
                 'Content-Type': 'application/json',
-                'HTTP-Referer': window.location.origin,
-                'X-Title': 'CV Magic Generator'
             },
             body: JSON.stringify({
-                model: options.model || OPENROUTER_CONFIG.model,
-                messages,
-                temperature: options.temperature ?? 0.7,
-                max_tokens: options.maxTokens || 2000,
-            })
+                prompt,
+                options,
+            }),
         });
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error?.message || `Error de OpenRouter: ${response.status}`);
+        const data = await res.json().catch(() => null);
+
+        if (!res.ok) {
+            throw new Error(data?.error || 'Error llamando al servicio de IA');
         }
 
-        const data = await response.json();
-        return data.choices[0]?.message?.content || '';
+        const text = String(data?.text || '').trim();
+        if (!text) {
+            throw new Error('La IA devolvió una respuesta vacía.');
+        }
+
+        return text;
     } catch (error) {
-        console.error('OpenRouter API error:', error);
+        console.error('AI backend error:', error);
         throw error;
     }
 };
@@ -83,7 +112,7 @@ Reglas:
             { role: 'user', content: `Normaliza estos datos:\n${JSON.stringify(payload, null, 2)}` },
         ];
 
-        const response = await callOpenRouter(messages, { temperature: 0.2, maxTokens: 250 });
+        const response = await callApiFreeLLM(messages, { temperature: 0.2, maxTokens: 250 });
         const cleanJson = response.replace(/```json\n?|\n?```/g, '').trim();
         const parsed = JSON.parse(cleanJson);
 
@@ -153,10 +182,9 @@ Extrae toda la información disponible. Si algún campo no está disponible, dé
         { role: 'user', content: `Analiza y extrae los datos del siguiente CV:\n\n${pdfText}` }
     ];
 
-    const response = await callOpenRouter(messages, { temperature: 0.3 });
+    const response = await callApiFreeLLM(messages, { temperature: 0.3 });
 
     try {
-        // Limpiar la respuesta de posibles caracteres extra
         const cleanJson = response.replace(/```json\n?|\n?```/g, '').trim();
         return JSON.parse(cleanJson);
     } catch (error) {
@@ -221,7 +249,7 @@ ${text}
         { role: 'user', content: context }
     ];
 
-    const response = await callOpenRouter(messages, { temperature: 0.8 });
+    const response = await callApiFreeLLM(messages, { temperature: 0.8 });
 
     try {
         const cleanJson = response.replace(/```json\n?|\n?```/g, '').trim();
@@ -287,7 +315,7 @@ ${jobPosition ? `Puesto al que aplica: ${jobPosition}` : ''}`;
         { role: 'user', content: `Genera una carta de presentación para:\n\n${cvSummary}` }
     ];
 
-    return await callOpenRouter(messages, { temperature: 0.7, maxTokens: 1500 });
+    return await callApiFreeLLM(messages, { temperature: 0.7, maxTokens: 1500 });
 };
 
 /**
@@ -322,11 +350,11 @@ ${JSON.stringify(collectedData, null, 2)}`;
         ...chatHistory
     ];
 
-    return await callOpenRouter(messages, { temperature: 0.7, maxTokens: 500 });
+    return await callApiFreeLLM(messages, { temperature: 0.7, maxTokens: 500 });
 };
 
 export default {
-    callOpenRouter,
+    callApiFreeLLM,
     extractCVFromText,
     cleanOnboardingCvData,
     improveTextWithAI,
@@ -334,3 +362,4 @@ export default {
     generateCoverLetter,
     getChatResponse,
 };
+

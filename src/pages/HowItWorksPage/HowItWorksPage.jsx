@@ -138,12 +138,12 @@ const HowItWorksPage = () => {
                         <div className="how-cta-buttons">
                             <Link to="/crear">
                                 <Button size="lg" rightIcon={<ArrowRight size={20} />}>
-                                    Crear mi CV Gratis
+                                    Crear desde cero
                                 </Button>
                             </Link>
                             <Link to="/importar">
                                 <Button variant="outline" size="lg">
-                                    Importar PDF
+                                    Mejorar CV
                                 </Button>
                             </Link>
                         </div>

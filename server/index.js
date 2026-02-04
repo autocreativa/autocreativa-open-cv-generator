@@ -381,6 +381,87 @@ apiRouter.get('/health', (_req, res) => {
     res.json({ ok: true });
 });
 
+// ApiFreeLLM proxy endpoint (evita CORS en frontend)
+apiRouter.post('/ai-chat', async (req, res) => {
+    const { prompt, options } = req.body || {};
+
+    if (!prompt || typeof prompt !== 'string') {
+        return res.status(400).json({ ok: false, error: 'Prompt requerido para IA' });
+    }
+
+    const apiKey = process.env.APIFREELLM_API_KEY;
+    const baseUrl = process.env.APIFREELLM_API_URL || 'https://apifreellm.com/api/v1/chat';
+
+    if (!apiKey) {
+        console.error('APIFREELLM_API_KEY no configurada');
+        return res.status(500).json({ ok: false, error: 'Servicio de IA no configurado en el servidor' });
+    }
+
+    const controller = new AbortController();
+    const timeoutMs = Number(process.env.APIFREELLM_TIMEOUT_MS || 30000);
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+        const upstream = await fetch(baseUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({ message: prompt }),
+            signal: controller.signal,
+        });
+
+        let errorBody = '';
+        if (!upstream.ok) {
+            try {
+                errorBody = await upstream.text();
+            } catch {
+                // ignore
+            }
+
+            if (upstream.status === 400) {
+                return res.status(400).json({ ok: false, error: 'Petición inválida a ApiFreeLLM (400).' });
+            }
+            if (upstream.status === 401) {
+                return res.status(401).json({ ok: false, error: 'API key de ApiFreeLLM inválida (401).' });
+            }
+            if (upstream.status === 429) {
+                // Sugerimos al cliente reintentar luego de 5s
+                return res.status(429).json({
+                    ok: false,
+                    error: 'Límite de peticiones alcanzado en ApiFreeLLM (429). Espera unos segundos y vuelve a intentar.',
+                });
+            }
+
+            console.error('ApiFreeLLM upstream error:', upstream.status, errorBody);
+            return res.status(502).json({
+                ok: false,
+                error: `Error de ApiFreeLLM (${upstream.status}).`,
+            });
+        }
+
+        const data = await upstream.json().catch(() => null);
+        if (!data || !data.success) {
+            console.error('ApiFreeLLM respuesta inválida:', data);
+            return res.status(502).json({ ok: false, error: 'Respuesta inválida de ApiFreeLLM.' });
+        }
+
+        const text = String(data.response || '').trim();
+        return res.json({ ok: true, text });
+    } catch (err) {
+        clearTimeout(timeout);
+        if (err.name === 'AbortError') {
+            console.error('ApiFreeLLM timeout:', err);
+            return res.status(504).json({ ok: false, error: 'Timeout al llamar a ApiFreeLLM.' });
+        }
+        console.error('Error llamando a ApiFreeLLM:', err);
+        return res.status(500).json({ ok: false, error: 'No se pudo contactar al proveedor de IA.' });
+    } finally {
+        clearTimeout(timeout);
+    }
+});
+
 apiRouter.post('/support', supportLimiter, supportSlowDown, async (req, res) => {
     const {
         name,

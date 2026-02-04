@@ -17,7 +17,7 @@ import Button from '../../components/common/Button';
 import CoverLetterModal from '../../components/editor/CoverLetterModal';
 import { useCV } from '../../context/CVContext';
 import { templates, getTemplateComponent } from '../../templates';
-import { getImprovementSuggestions } from '../../services/openRouterService';
+import { getImprovementSuggestions } from '../../services/apiFreeLLMService';
 import { exportToPDF, generatePDFBlob } from '../../utils/pdfExporter';
 import { trackDownload } from '../../services/mailTrackingService';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';

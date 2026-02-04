@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { extractTextFromPDF, validatePDFFile, getPDFInfo } from '../services/pdfService';
-import { extractCVFromText } from '../services/openRouterService';
+import { extractCVFromText } from '../services/apiFreeLLMService';
 
 /**
  * Hook para manejar la lectura y procesamiento de PDFs

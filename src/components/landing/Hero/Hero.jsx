@@ -47,12 +47,12 @@ const Hero = () => {
                     <div className="hero-actions animate-fadeInUp animation-delay-200">
                         <Link to="/crear">
                             <Button size="lg" rightIcon={<ArrowRight size={20} />}>
-                                Crear mi CV Gratis
+                                Crear desde cero
                             </Button>
                         </Link>
                         <Link to="/importar">
                             <Button variant="outline" size="lg" leftIcon={<FileUp size={20} />}>
-                                Importar PDF
+                                Mejorar CV
                             </Button>
                         </Link>
                     </div>

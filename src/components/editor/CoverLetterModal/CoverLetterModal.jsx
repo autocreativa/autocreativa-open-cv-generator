@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { X, Sparkles, Copy, Download, RefreshCw, Check } from 'lucide-react';
 import Button from '../../common/Button';
-import { generateCoverLetter } from '../../../services/openRouterService';
+import { generateCoverLetter } from '../../../services/apiFreeLLMService';
 import { exportToPDF, generatePDFBlob } from '../../../utils/pdfExporter';
 import { trackDownload } from '../../../services/mailTrackingService';
 import './CoverLetterModal.css';

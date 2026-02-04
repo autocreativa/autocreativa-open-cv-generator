@@ -21,7 +21,7 @@ const Landing = () => {
                         </p>
                         <div className="tech-badges">
                             <span className="tech-badge">React</span>
-                            <span className="tech-badge">OpenRouter AI</span>
+                            <span className="tech-badge">ApiFreeLLM</span>
                             <span className="tech-badge">PDF.js</span>
                             <span className="tech-badge">Tesseract OCR</span>
                             <span className="tech-badge">Web Speech API</span>
@@ -42,7 +42,7 @@ const Landing = () => {
                             Es gratis, rápido y potenciado por IA.
                         </p>
                         <Link to="/crear" className="cta-button">
-                            Crear mi CV Gratis
+                            Crear desde cero
                         </Link>
                     </div>
                 </div>

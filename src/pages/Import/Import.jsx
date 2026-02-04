@@ -60,7 +60,10 @@ const Import = () => {
                 setShowPreview(true);
             }
         } catch (err) {
+            console.error('PDF hook error:', pdf.error, 'Texto extraído:', pdf.extractedText?.slice(0, 200));
             console.error('Error processing PDF:', err);
+            console.error('Error processing file:', err);
+
         }
     };
 

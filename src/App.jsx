@@ -7,6 +7,7 @@ import Landing from './pages/Landing';
 import Import from './pages/Import';
 import SelectTemplate from './pages/SelectTemplate';
 import CreateCV from './pages/CreateCV';
+import CreateMethodSelection from './pages/CreateCV/CreateMethodSelection';
 import Editor from './pages/Editor';
 import HowItWorksPage from './pages/HowItWorksPage';
 import Terms from './pages/Terms';
@@ -32,7 +33,8 @@ function App() {
             <Route path="/plantillas" element={<SelectTemplate />} />
 
             {/* Core Features */}
-            <Route path="/crear" element={<CreateCV />} />
+            <Route path="/crear" element={<CreateMethodSelection />} />
+            <Route path="/crear/asistente" element={<CreateCV />} />
             <Route path="/editor" element={<Editor />} />
 
             <Route path="/como-funciona" element={<HowItWorksPage />} />

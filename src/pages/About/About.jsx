@@ -154,7 +154,7 @@ const About = () => {
                         <div className="about-cta-buttons">
                             <Link to="/crear">
                                 <Button size="lg" rightIcon={<ArrowRight size={20} />}>
-                                    Crear mi CV Gratis
+                                    Crear desde cero
                                 </Button>
                             </Link>
                             <Link to="/contacto">
