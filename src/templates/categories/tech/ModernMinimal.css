@@ -13,7 +13,7 @@
 }
 
 /* Header */
-.cv-header {
+.cv-template.modern-minimal .cv-header {
     display: flex;
     gap: 24px;
     align-items: center;
@@ -22,11 +22,11 @@
     border-bottom: 2px solid #e5e7eb;
 }
 
-.profile-image-wrapper {
+.cv-template.modern-minimal .profile-image-wrapper {
     flex-shrink: 0;
 }
 
-.profile-image {
+.cv-template.modern-minimal .profile-image {
     width: 100px;
     height: 100px;
     border-radius: 50%;
@@ -34,25 +34,25 @@
     border: 3px solid #22c55e;
 }
 
-.header-info {
+.cv-template.modern-minimal .header-info {
     flex: 1;
 }
 
-.cv-name {
+.cv-template.modern-minimal .cv-name {
     font-size: 32px;
     font-weight: 700;
     color: #111827;
     margin-bottom: 8px;
 }
 
-.contact-row {
+.cv-template.modern-minimal .contact-row {
     display: flex;
     flex-wrap: wrap;
     gap: 16px;
     margin-bottom: 8px;
 }
 
-.contact-item {
+.cv-template.modern-minimal .contact-item {
     font-size: 14px;
     color: #6b7280;
     display: flex;
@@ -60,39 +60,39 @@
     gap: 4px;
 }
 
-.contact-item::before {
+.cv-template.modern-minimal .contact-item::before {
     content: '•';
     color: #22c55e;
     font-weight: bold;
 }
 
-.contact-item:first-child::before {
+.cv-template.modern-minimal .contact-item:first-child::before {
     content: '';
 }
 
-.social-row {
+.cv-template.modern-minimal .social-row {
     display: flex;
     gap: 12px;
 }
 
-.social-link {
+.cv-template.modern-minimal .social-link {
     font-size: 13px;
     color: #22c55e;
     text-decoration: none;
     transition: color 0.2s;
 }
 
-.social-link:hover {
+.cv-template.modern-minimal .social-link:hover {
     color: #16a34a;
     text-decoration: underline;
 }
 
 /* Dejar que el navegador decida los saltos de página */
-.cv-section {
+.cv-template.modern-minimal .cv-section {
     margin-bottom: 28px;
 }
 
-.section-title {
+.cv-template.modern-minimal .section-title {
     font-size: 14px;
     font-weight: 700;
     text-transform: uppercase;
@@ -103,79 +103,79 @@
     border-bottom: 1px solid #e5e7eb;
 }
 
-.summary-text {
+.cv-template.modern-minimal .summary-text {
     font-size: 15px;
     color: #4b5563;
     line-height: 1.7;
 }
 
 /* Experience */
-.experience-list,
-.education-list {
+.cv-template.modern-minimal .experience-list,
+.cv-template.modern-minimal .education-list {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
-.experience-item,
-.education-item {
+.cv-template.modern-minimal .experience-item,
+.cv-template.modern-minimal .education-item {
     position: relative;
 }
 
-.experience-header,
-.education-header {
+.cv-template.modern-minimal .experience-header,
+.cv-template.modern-minimal .education-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 8px;
 }
 
-.experience-title,
-.education-title {
+.cv-template.modern-minimal .experience-title,
+.cv-template.modern-minimal .education-title {
     flex: 1;
 }
 
-.position,
-.degree {
+.cv-template.modern-minimal .position,
+.cv-template.modern-minimal .degree {
     font-size: 16px;
     font-weight: 600;
     color: #111827;
     margin-bottom: 2px;
 }
 
-.company,
-.institution {
+.cv-template.modern-minimal .company,
+.cv-template.modern-minimal .institution {
     font-size: 14px;
     color: #6b7280;
 }
 
-.date-range {
+.cv-template.modern-minimal .date-range {
     font-size: 13px;
     color: #9ca3af;
     white-space: nowrap;
     text-align: right;
 }
 
-.experience-description {
+.cv-template.modern-minimal .experience-description {
     font-size: 14px;
     color: #4b5563;
     line-height: 1.6;
 }
 
-.field {
+.cv-template.modern-minimal .field {
     font-size: 13px;
     color: #6b7280;
     font-style: italic;
 }
 
 /* Skills */
-.skills-grid {
+.cv-template.modern-minimal .skills-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
 }
 
-.skill-item {
+.cv-template.modern-minimal .skill-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -183,35 +183,35 @@
     border-bottom: 1px solid #f3f4f6;
 }
 
-.skill-name {
+.cv-template.modern-minimal .skill-name {
     font-size: 14px;
     color: #374151;
 }
 
-.skill-level {
+.cv-template.modern-minimal .skill-level {
     display: flex;
     gap: 4px;
 }
 
-.level-dot {
+.cv-template.modern-minimal .level-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
     background: #e5e7eb;
 }
 
-.level-dot.active {
+.cv-template.modern-minimal .level-dot.active {
     background: #22c55e;
 }
 
 /* Tags */
-.tags-list {
+.cv-template.modern-minimal .tags-list {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
 }
 
-.tag {
+.cv-template.modern-minimal .tag {
     padding: 6px 12px;
     background: #f0fdf4;
     color: #16a34a;
@@ -221,13 +221,13 @@
 }
 
 /* Languages */
-.languages-list {
+.cv-template.modern-minimal .languages-list {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
 }
 
-.language-item {
+.cv-template.modern-minimal .language-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -236,81 +236,81 @@
     border-radius: 6px;
 }
 
-.language-name {
+.cv-template.modern-minimal .language-name {
     font-size: 14px;
     font-weight: 500;
     color: #374151;
 }
 
-.language-level {
+.cv-template.modern-minimal .language-level {
     font-size: 13px;
     color: #6b7280;
 }
 
 /* Certifications */
-.certifications-list {
+.cv-template.modern-minimal .certifications-list {
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
-.certification-item {
+.cv-template.modern-minimal .certification-item {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     align-items: baseline;
 }
 
-.cert-name {
+.cv-template.modern-minimal .cert-name {
     font-size: 14px;
     font-weight: 500;
     color: #374151;
 }
 
-.cert-institution {
+.cv-template.modern-minimal .cert-institution {
     font-size: 13px;
     color: #6b7280;
 }
 
-.cert-date {
+.cv-template.modern-minimal .cert-date {
     font-size: 12px;
     color: #9ca3af;
 }
 
 /* Projects */
-.projects-list {
+.cv-template.modern-minimal .projects-list {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
-.project-item {
+.cv-template.modern-minimal .project-item {
     padding: 16px;
     background: #f9fafb;
     border-radius: 8px;
     border-left: 3px solid #22c55e;
 }
 
-.project-name {
+.cv-template.modern-minimal .project-name {
     font-size: 15px;
     font-weight: 600;
     color: #111827;
     margin-bottom: 8px;
 }
 
-.project-description {
+.cv-template.modern-minimal .project-description {
     font-size: 14px;
     color: #4b5563;
     margin-bottom: 12px;
 }
 
-.project-tech {
+.cv-template.modern-minimal .project-tech {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
 }
 
-.tech-tag {
+.cv-template.modern-minimal .tech-tag {
     padding: 4px 8px;
     background: #d1fae5;
     color: #065f46;

@@ -9,13 +9,13 @@
     margin: 0 auto;
 }
 
-.tech-header {
+.tech-details-template .tech-header {
     border-bottom: 2px solid #333;
     padding-bottom: 20px;
     margin-bottom: 24px;
 }
 
-.tech-name {
+.tech-details-template .tech-name {
     font-size: 28px;
     font-weight: 800;
     text-transform: uppercase;
@@ -23,7 +23,7 @@
     letter-spacing: -0.5px;
 }
 
-.tech-contact-bar {
+.tech-details-template .tech-contact-bar {
     display: flex;
     gap: 16px;
     font-size: 13px;
@@ -31,13 +31,13 @@
     flex-wrap: wrap;
 }
 
-.contact-item {
+.tech-details-template .contact-item {
     display: flex;
     align-items: center;
     gap: 4px;
 }
 
-.section-title {
+.tech-details-template .section-title {
     font-size: 14px;
     font-weight: 700;
     color: #666;
@@ -48,12 +48,12 @@
     margin-top: 24px;
 }
 
-.summary-text {
+.tech-details-template .summary-text {
     font-size: 14px;
     color: #444;
 }
 
-.tech-tag {
+.tech-details-template .tech-tag {
     display: inline-block;
     background: #f3f4f6;
     padding: 4px 8px;
@@ -65,56 +65,56 @@
     border: 1px solid #e5e7eb;
 }
 
-.experience-item,
-.project-item,
-.education-item {
+.tech-details-template .experience-item,
+.tech-details-template .project-item,
+.tech-details-template .education-item {
     margin-bottom: 16px;
 }
 
-.exp-header,
-.edu-header {
+.tech-details-template .exp-header,
+.tech-details-template .edu-header {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
     margin-bottom: 2px;
 }
 
-.exp-role,
-.edu-degree {
+.tech-details-template .exp-role,
+.tech-details-template .edu-degree {
     font-size: 16px;
     font-weight: 600;
     color: #111;
 }
 
-.exp-date,
-.edu-date {
+.tech-details-template .exp-date,
+.tech-details-template .edu-date {
     font-size: 12px;
     color: #666;
     font-family: monospace;
 }
 
-.exp-company,
-.edu-school {
+.tech-details-template .exp-company,
+.tech-details-template .edu-school {
     font-size: 14px;
     color: #444;
     font-weight: 500;
     margin-bottom: 4px;
 }
 
-.exp-desc,
-.project-desc {
+.tech-details-template .exp-desc,
+.tech-details-template .project-desc {
     font-size: 13px;
     color: #555;
     white-space: pre-line;
 }
 
-.project-name {
+.tech-details-template .project-name {
     font-size: 15px;
     font-weight: 600;
     margin-bottom: 2px;
 }
 
-.tech-mini-tag {
+.tech-details-template .tech-mini-tag {
     display: inline-block;
     font-size: 11px;
     color: #666;

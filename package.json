@@ -29,6 +29,7 @@
     "html2pdf.js": "^0.14.0",
     "lucide-react": "^0.563.0",
     "nodemailer": "^7.0.13",
+    "pagedjs": "^0.4.3",
     "pdfjs-dist": "^5.4.530",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

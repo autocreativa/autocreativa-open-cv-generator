@@ -8,28 +8,28 @@
     margin: 0 auto;
 }
 
-.care-sidebar {
+.care-clean-template .care-sidebar {
     background: #0ea5e9;
     /* Sky blue */
     color: white;
     padding: 30px 20px;
 }
 
-.care-name {
+.care-clean-template .care-name {
     font-size: 24px;
     font-weight: 700;
     line-height: 1.2;
     margin-bottom: 8px;
 }
 
-.care-title {
+.care-clean-template .care-title {
     font-size: 14px;
     font-weight: 400;
     opacity: 0.9;
     margin-bottom: 40px;
 }
 
-.sidebar-title {
+.care-clean-template .sidebar-title {
     font-size: 12px;
     text-transform: uppercase;
     font-weight: 600;
@@ -40,7 +40,7 @@
     margin-top: 24px;
 }
 
-.care-contact-item {
+.care-clean-template .care-contact-item {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -48,29 +48,29 @@
     margin-bottom: 8px;
 }
 
-.care-skills ul {
+.care-clean-template .care-skills ul {
     list-style: none;
     padding: 0;
     font-size: 13px;
 }
 
-.care-skills li {
+.care-clean-template .care-skills li {
     margin-bottom: 6px;
     padding-bottom: 6px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.care-main {
+.care-clean-template .care-main {
     padding: 40px;
     color: #334155;
 }
 
 /* Dejar que el navegador decida los saltos de página */
-.care-section {
+.care-clean-template .care-section {
     margin-bottom: 30px;
 }
 
-.care-section-title {
+.care-clean-template .care-section-title {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -81,42 +81,42 @@
     margin-bottom: 16px;
 }
 
-.care-icon {
+.care-clean-template .care-icon {
     fill: #0ea5e9;
     color: #0ea5e9;
 }
 
-.care-item {
+.care-clean-template .care-item {
     margin-bottom: 20px;
 }
 
-.care-item-header {
+.care-clean-template .care-item-header {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
     margin-bottom: 2px;
 }
 
-.care-item-header h4 {
+.care-clean-template .care-item-header h4 {
     font-size: 16px;
     font-weight: 600;
     color: #0f172a;
 }
 
-.care-date {
+.care-clean-template .care-date {
     font-size: 12px;
     color: #64748b;
     font-weight: 500;
 }
 
-.care-company {
+.care-clean-template .care-company {
     font-size: 14px;
     color: #0ea5e9;
     font-weight: 500;
     margin-bottom: 6px;
 }
 
-.care-text {
+.care-clean-template .care-text {
     font-size: 14px;
     line-height: 1.6;
     color: #475569;

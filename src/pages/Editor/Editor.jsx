@@ -16,16 +16,13 @@ import {
 } from 'lucide-react';
 import Button from '../../components/common/Button';
 import CoverLetterModal from '../../components/editor/CoverLetterModal';
+import PagedPreview from '../../components/preview/PagedPreview'; // [NEW] Paged.js Preview
 import { useCV } from '../../context/CVContext';
 import { templates, getTemplateComponent } from '../../templates';
 import { getImprovementSuggestions } from '../../services/apiFreeLLMService';
 import { exportToPDF, generatePDFBlob } from '../../utils/pdfExporter';
 import { trackDownload } from '../../services/mailTrackingService';
-import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
-import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import './Editor.css';
-
-GlobalWorkerOptions.workerSrc = pdfWorker;
 
 const Editor = () => {
     const navigate = useNavigate();
@@ -43,10 +40,7 @@ const Editor = () => {
 
     const [pageSize, setPageSize] = useState('a4');
 
-    const [previewPages, setPreviewPages] = useState([]);
-    const [isRenderingPreview, setIsRenderingPreview] = useState(false);
-    const [previewFailed, setPreviewFailed] = useState(false);
-    const previewJobRef = useRef(0);
+    // Removed old PDF preview states
     const previewDebounceRef = useRef(null);
 
     const prevTemplateRef = useRef(currentTemplate);
@@ -144,145 +138,81 @@ const Editor = () => {
     };
 
     const handleExportPDF = async () => {
+        // With Paged.js, the page is already formatted for print.
+        // We simply trigger the browser's print dialog, which will respect the Paged.js CSS.
         if (isExporting) return;
         setIsExporting(true);
 
-        // Real-time preview is now always active
+        const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-        // Wait for render
-        setTimeout(async () => {
-            const content = document.getElementById('cv-content');
-            if (content) {
-                const blob = await generatePDFBlob(content, { format: pageSize });
-                await trackDownload({
-                    eventType: 'cv_pdf',
-                    fileName: `CV_${cvData?.contactInfo?.fullName || 'Profesional'}.pdf`,
-                    blob,
-                    user: {
-                        fullName: cvData?.contactInfo?.fullName || '',
-                        email: cvData?.contactInfo?.email || '',
-                        phone: cvData?.contactInfo?.phone || '',
-                        city: cvData?.contactInfo?.city || '',
-                        country: cvData?.contactInfo?.country || '',
-                    },
-                });
-
-                const success = await exportToPDF(
-                    content,
-                    `CV_${cvData?.contactInfo?.fullName || 'Profesional'}.pdf`,
-                    { format: pageSize }
-                );
-                if (success) {
-                    // Success notification
-                }
-            } else {
-                // Fallback if id not found (templates should have id="cv-content")
-                const previewEl = document.querySelector('.cv-preview > div');
-                if (previewEl) {
-                    const blob = await generatePDFBlob(previewEl, { format: pageSize });
-                    await trackDownload({
-                        eventType: 'cv_pdf',
-                        fileName: `CV_${cvData?.contactInfo?.fullName || 'Profesional'}.pdf`,
-                        blob,
-                        user: {
-                            fullName: cvData?.contactInfo?.fullName || '',
-                            email: cvData?.contactInfo?.email || '',
-                            phone: cvData?.contactInfo?.phone || '',
-                            city: cvData?.contactInfo?.city || '',
-                            country: cvData?.contactInfo?.country || '',
-                        },
-                    });
-
-                    await exportToPDF(
-                        previewEl,
-                        `CV_${cvData?.contactInfo?.fullName || 'Profesional'}.pdf`,
-                        { format: pageSize }
-                    );
-                } else {
-                    window.print();
-                }
+        const waitForPagedPages = async () => {
+            const timeoutMs = 12000;
+            const start = Date.now();
+            while (Date.now() - start < timeoutMs) {
+                const pagesRoot = document.querySelector('.paged-preview-wrapper .pagedjs_pages');
+                const hasAtLeastOnePage = !!pagesRoot?.querySelector('.pagedjs_page');
+                if (hasAtLeastOnePage) return true;
+                await wait(200);
             }
-            setIsExporting(false);
-        }, 500);
-    };
+            return false;
+        };
 
-    const renderPdfPreviewPages = async () => {
-        const jobId = ++previewJobRef.current;
-        setIsRenderingPreview(true);
-        setPreviewFailed(false);
+        const waitForImages = async () => {
+            const images = Array.from(document.querySelectorAll('.paged-preview-wrapper img'));
+            const pending = images.filter((img) => !img.complete);
+            if (pending.length === 0) return;
+
+            await Promise.all(
+                pending.map(
+                    (img) =>
+                        new Promise((resolve) => {
+                            img.addEventListener('load', resolve, { once: true });
+                            img.addEventListener('error', resolve, { once: true });
+                        })
+                )
+            );
+        };
 
         try {
-            const content = document.getElementById('cv-content');
-            if (!content) {
-                if (jobId === previewJobRef.current) setPreviewPages([]);
-                return;
+            await wait(50);
+            if (document?.fonts?.ready) {
+                try {
+                    await document.fonts.ready;
+                } catch {
+                    // ignore
+                }
             }
 
-            const blob = await generatePDFBlob(content, { format: pageSize });
-            if (!blob) {
-                if (jobId === previewJobRef.current) setPreviewPages([]);
-                if (jobId === previewJobRef.current) setPreviewFailed(true);
-                return;
-            }
+            await waitForPagedPages();
+            await waitForImages();
+            await wait(50);
 
-            const buffer = await blob.arrayBuffer();
-            const pdf = await getDocument({ data: buffer }).promise;
-
-            const pageImages = [];
-            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                const page = await pdf.getPage(pageNum);
-                const viewport = page.getViewport({ scale: 1.5 });
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.width = Math.floor(viewport.width);
-                canvas.height = Math.floor(viewport.height);
-
-                await page.render({ canvasContext: ctx, viewport }).promise;
-                pageImages.push(canvas.toDataURL('image/png'));
-            }
-
-            if (jobId === previewJobRef.current) {
-                setPreviewPages(pageImages);
-            }
-        } catch (error) {
-            console.error('Error rendering PDF preview:', error);
-            if (jobId === previewJobRef.current) {
-                setPreviewPages([]);
-                setPreviewFailed(true);
-            }
+            window.print();
         } finally {
-            if (jobId === previewJobRef.current) setIsRenderingPreview(false);
+            setIsExporting(false);
         }
+
+        // Track the download
+        trackDownload({
+            eventType: 'cv_pdf',
+            fileName: `CV_${cvData?.contactInfo?.fullName || 'Profesional'}.pdf`,
+            blob: null, // Paged.js prints directly, no blob generated here
+            user: {
+                fullName: cvData?.contactInfo?.fullName || '',
+                email: cvData?.contactInfo?.email || '',
+                phone: cvData?.contactInfo?.phone || '',
+                city: cvData?.contactInfo?.city || '',
+                country: cvData?.contactInfo?.country || '',
+            },
+        });
     };
 
+    // Old PDF Preview renderer removed
+
+
     useEffect(() => {
-        const templateChanged = prevTemplateRef.current !== currentTemplate;
-        const pageSizeChanged = prevPageSizeRef.current !== pageSize;
-
-        if (templateChanged || pageSizeChanged) {
-            setPreviewPages([]);
-        }
-
-        prevTemplateRef.current = currentTemplate;
-        prevPageSizeRef.current = pageSize;
-
-        if (templateChanged || pageSizeChanged) {
-            setIsRenderingPreview(true);
-        }
-
-        if (previewDebounceRef.current) {
-            clearTimeout(previewDebounceRef.current);
-        }
-
-        previewDebounceRef.current = setTimeout(() => {
-            renderPdfPreviewPages();
-        }, 250);
-
-        return () => {
-            if (previewDebounceRef.current) {
-                clearTimeout(previewDebounceRef.current);
-            }
-        };
+        // Just keeping logic to clear debouncer if needed, though PagedPreview handles its own updates
+        // We can keep specific side effects here if needed
     }, [currentTemplate, pageSize, cvData, selectedSections]);
 
     const sectionLabels = {
@@ -1150,33 +1080,13 @@ const Editor = () => {
                     <div className="preview-wrapper">
                         {TemplateComponent ? (
                             <>
-                                <div className={`pdf-pages page-${pageSize}`}>
-                                    {previewPages.map((src, idx) => (
-                                        <div key={idx} className="pdf-page">
-                                            <img src={src} alt={`Página ${idx + 1}`} />
-                                        </div>
-                                    ))}
-
-                                    {isRenderingPreview && previewPages.length === 0 && (
-                                        <>
-                                            <div className="pdf-page pdf-page-skeleton" aria-hidden="true" />
-                                            <div className="pdf-page pdf-page-skeleton" aria-hidden="true" />
-                                        </>
-                                    )}
-
-                                    {(!isRenderingPreview && previewPages.length === 0) && (
-                                        previewFailed ? (
-                                            <div className="pdf-pages-empty">
-                                                <span>No se pudo generar la vista previa.</span>
-                                            </div>
-                                        ) : null
-                                    )}
-                                </div>
-
-                                <div className={`cv-preview page-${pageSize} pdf-source`} aria-hidden="true">
-                                    <TemplateComponent
-                                        cvData={{ ...cvData, selectedSections }}
-                                    />
+                                {/* Paged.js Preview */}
+                                <div className="paged-preview-host">
+                                    <PagedPreview cvData={cvData}>
+                                        <TemplateComponent
+                                            cvData={{ ...cvData, selectedSections }}
+                                        />
+                                    </PagedPreview>
                                 </div>
                             </>
                         ) : (

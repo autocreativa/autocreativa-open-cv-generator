@@ -852,7 +852,7 @@ html.pdf-exporting .cv-template {
 }
 
 /* Responsive */
-@media (max-width: 1024px) {
+@media screen and (max-width: 1024px) {
     .editor-content {
         grid-template-columns: 1fr;
     }
@@ -867,12 +867,51 @@ html.pdf-exporting .cv-template {
         display: flex;
     }
 
+    /* Right Panel - Preview - HIDDEN ON MOBILE */
+    .preview-panel {
+        display: none;
+        /* Hide preview on mobile as requested to fix loading/crash issues */
+    }
+
     .toolbar-center {
         display: none;
     }
 }
 
-@media (max-width: 640px) {
+@media screen and (min-width: 1024px) {
+    .editor-grid {
+        display: grid;
+        grid-template-columns: 280px 1fr 1fr;
+        grid-template-rows: auto;
+        gap: 0;
+        height: calc(100vh - 72px - 65px);
+        /* Toolbar height + header */
+        overflow: hidden;
+    }
+
+    /* Unified Sidebar */
+    .sidebar-nav {
+        border-right: 1px solid var(--border-light);
+        display: flex;
+        flex-direction: column;
+        background: white;
+        overflow-y: auto;
+    }
+
+    .preview-panel {
+        display: block;
+        /* Show on desktop */
+        background: var(--bg-secondary);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .preview-panel {
+        padding: 0;
+    }
+}
+
+@media screen and (max-width: 640px) {
     .editor-toolbar {
         flex-wrap: wrap;
         padding: var(--space-3);
@@ -904,7 +943,13 @@ html.pdf-exporting .cv-template {
     }
 
     .preview-panel {
+        display: block !important;
         padding: 0;
+    }
+
+    .preview-wrapper,
+    .paged-preview-host {
+        display: block !important;
     }
 
     .cv-preview {
